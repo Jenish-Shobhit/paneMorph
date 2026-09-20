@@ -1,0 +1,29 @@
+# paneMorph's direct two-key preset.
+# Review conflicts before merging this into ~/.config/herdr/config.toml.
+[keys]
+new_tab = "ctrl+t"
+split_vertical = "ctrl+n"
+next_tab = "ctrl+]"
+previous_tab = "ctrl+["
+cycle_pane_next = "ctrl+l"
+cycle_pane_previous = "ctrl+h"
+last_pane = "ctrl+backtick"
+
+[[keys.command]]
+key = "ctrl+e"
+type = "plugin_action"
+command = "dev.panemorph.extract-pane"
+description = "Move focused pane to a background tab"
+
+[[keys.command]]
+key = "ctrl+g"
+type = "plugin_action"
+command = "dev.panemorph.send-pane"
+description = "Send focused pane to a tab"
+
+[[keys.command]]
+key = "ctrl+r"
+type = "plugin_action"
+command = "dev.panemorph.bring-pane"
+description = "Bring a tab or pane into this tab"
+
