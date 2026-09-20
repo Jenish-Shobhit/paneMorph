@@ -1,0 +1,31 @@
+id = "dev.panemorph"
+name = "paneMorph"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Create, switch, extract, send, and merge live Herdr panes and tabs."
+platforms = ["macos", "linux"]
+
+[[actions]]
+id = "extract-pane"
+title = "Move focused pane to a background tab"
+contexts = ["pane"]
+command = ["python3", "-m", "panemorph.actions.extract"]
+
+[[actions]]
+id = "send-pane"
+title = "Send focused pane to a tab"
+contexts = ["pane"]
+command = ["python3", "-m", "panemorph.actions.open_selector", "send"]
+
+[[actions]]
+id = "bring-pane"
+title = "Bring a tab or pane into the current tab"
+contexts = ["pane"]
+command = ["python3", "-m", "panemorph.actions.open_selector", "bring"]
+
+[[panes]]
+id = "selector"
+title = "paneMorph"
+placement = "overlay"
+command = ["python3", "-m", "panemorph.actions.selector"]
+
