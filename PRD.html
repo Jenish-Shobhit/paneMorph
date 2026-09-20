@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Product requirements for paneMorph, an open-source tab and pane workflow plugin for Herdr.">
+  <title>paneMorph — Workflow-first PRD</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f4f7fb;
+      --paper: #ffffff;
+      --ink: #142033;
+      --muted: #627089;
+      --line: #dbe3ef;
+      --line-strong: #bdc9da;
+      --blue: #2457d6;
+      --blue-soft: #eaf0ff;
+      --teal: #067a73;
+      --teal-soft: #e8f8f4;
+      --amber: #965c00;
+      --amber-soft: #fff6df;
+      --red: #a13643;
+      --red-soft: #fff0f2;
+      --shadow: 0 18px 55px rgba(35, 55, 89, .10);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--page); }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font: 16px/1.58 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: inherit; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, h3 { line-height: 1.16; letter-spacing: -.025em; }
+    h1 { margin-bottom: 8px; font-size: clamp(2rem, 5vw, 3.65rem); }
+    h2 { margin-bottom: 8px; font-size: clamp(1.65rem, 3.5vw, 2.45rem); }
+    h3 { margin-bottom: 8px; font-size: 1.12rem; }
+    code, kbd {
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #f8fafc;
+      color: #233451;
+      font: .82rem ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    code { padding: 2px 6px; }
+    kbd { display: inline-block; min-width: 28px; padding: 3px 7px; text-align: center; box-shadow: 0 2px 0 #c5cfde; }
+
+    .page { width: min(1260px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 96px; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 18px;
+      padding: 14px 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+      box-shadow: 0 7px 22px rgba(35, 55, 89, .06);
+    }
+    .identity { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 6px;
+      border-radius: 10px;
+      background: var(--blue);
+    }
+    .logo span { border-radius: 3px; background: #fff; }
+    .logo span:last-child { background: #8fe1d2; }
+    .identity strong { display: block; font-size: 1.05rem; }
+    .identity small, .meta { color: var(--muted); font-size: .82rem; }
+    .status { padding: 6px 10px; border: 1px solid #e1bc68; border-radius: 999px; background: var(--amber-soft); color: var(--amber); font-size: .76rem; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; }
+
+    .workflow-first {
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .workflow-first header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 30px; margin-bottom: 24px; }
+    .workflow-first header p { max-width: 760px; margin-bottom: 0; color: var(--muted); font-size: 1.05rem; }
+    .doc-id { color: var(--muted); font: .8rem ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; }
+    .workflow-index { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .workflow-index a {
+      min-height: 105px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfcfe;
+      text-decoration: none;
+      transition: 150ms ease;
+    }
+    .workflow-index a:hover { transform: translateY(-2px); border-color: #9fb4e8; box-shadow: 0 8px 20px rgba(36,87,214,.08); }
+    .workflow-index b { color: var(--blue); font: .76rem ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .workflow-index span { font-weight: 760; line-height: 1.24; }
+    .workflow-index small { color: var(--muted); }
+
+    section { margin-top: 36px; scroll-margin-top: 24px; }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 16px; }
+    .section-head p { max-width: 680px; margin-bottom: 0; color: var(--muted); }
+    .label { margin-bottom: 7px; color: var(--blue); font-size: .76rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+    .grid { display: grid; gap: 16px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card { padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: 0 8px 24px rgba(35,55,89,.05); }
+    .muted { color: var(--muted); }
+    .rule { padding: 15px 17px; border-left: 4px solid var(--blue); border-radius: 0 10px 10px 0; background: var(--blue-soft); }
+    .rule.safe { border-left-color: var(--teal); background: var(--teal-soft); }
+    .rule.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 20px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: 0 8px 24px rgba(35,55,89,.05);
+    }
+    .workflow + .workflow { margin-top: 14px; }
+    .wf-id { color: var(--blue); font: 700 .86rem ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .shortcut { margin-top: 10px; }
+    .shortcut small { display: block; margin-bottom: 5px; color: var(--muted); }
+    .wf-body > p { color: var(--muted); }
+    .state-flow { display: grid; grid-template-columns: 1fr 44px 1fr; align-items: stretch; gap: 9px; margin-top: 16px; }
+    .state {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 11px;
+      background: #f8fafc;
+      font: .78rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .state-title { margin-bottom: 9px; color: var(--muted); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; }
+    .tabs { display: flex; gap: 5px; margin-bottom: 6px; }
+    .tab { padding: 4px 7px; border: 1px solid #b9c6d9; border-radius: 6px 6px 2px 2px; background: #fff; color: #5f6d83; }
+    .tab.active { border-color: var(--blue); background: var(--blue-soft); color: #173e9b; font-weight: 750; }
+    .panes { display: flex; gap: 5px; min-height: 58px; }
+    .pane { flex: 1; min-width: 0; display: grid; place-items: center; padding: 8px; border: 1px solid #b9c6d9; border-radius: 6px; background: #fff; color: #526178; text-align: center; }
+    .pane.focus { border: 2px solid var(--teal); background: var(--teal-soft); color: #075e59; font-weight: 750; }
+    .pane.stack { display: grid; gap: 4px; padding: 4px; }
+    .pane.stack span { display: grid; place-items: center; min-height: 24px; border: 1px solid #c8d2e0; border-radius: 4px; background: #fff; }
+    .flow-arrow { display: grid; place-items: center; color: var(--blue); font-size: 1.4rem; font-weight: 900; }
+    .steps { margin: 14px 0 0; padding-left: 20px; }
+    .steps li + li { margin-top: 5px; }
+
+    .selector {
+      margin-top: 15px;
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(35,55,89,.09);
+    }
+    .search { padding: 12px 14px; border-bottom: 1px solid var(--line); color: #8a96a9; }
+    .option { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px; padding: 10px 14px; }
+    .option + .option { border-top: 1px solid #edf1f6; }
+    .option.active { background: var(--blue-soft); }
+    .option.child { padding-left: 38px; }
+    .option small { color: var(--muted); }
+
+    table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); background: var(--paper); }
+    th, td { padding: 13px 15px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #eef3f9; color: #34445d; font-size: .76rem; letter-spacing: .05em; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+
+    .decision { display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+    .decision input { width: 17px; height: 17px; margin-top: 4px; accent-color: var(--blue); }
+    .decision strong { display: block; }
+    .recommended { color: var(--teal); font-size: .73rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .approval { padding: 26px; border: 2px solid #8da7e8; border-radius: 18px; background: #f7f9ff; }
+    .approval ul { margin-bottom: 0; }
+    footer { margin-top: 34px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .82rem; }
+
+    @media (max-width: 960px) {
+      .workflow-index { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .workflow { grid-template-columns: 1fr; }
+      .shortcut { display: inline-block; margin: 0 0 0 10px; }
+    }
+    @media (max-width: 680px) {
+      .page { width: min(100% - 20px, 1260px); padding-top: 10px; }
+      .topbar { align-items: flex-start; }
+      .meta { display: none; }
+      .workflow-first { padding: 20px; }
+      .workflow-first header, .section-head { display: block; }
+      .doc-id { margin-top: 12px; text-align: left; }
+      .workflow-index, .grid.two, .state-flow { grid-template-columns: 1fr; }
+      .flow-arrow { min-height: 28px; transform: rotate(90deg); }
+      .workflow { padding: 18px; }
+      table { display: block; overflow-x: auto; }
+    }
+    @media print {
+      body, html { background: #fff; }
+      .page { width: 100%; padding: 0; }
+      .topbar, .workflow-first, .workflow, .card { box-shadow: none; }
+      .workflow, .card, .decision { break-inside: avoid; }
+      .workflow-index a { min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="identity">
+        <div class="logo" aria-hidden="true"><span></span><span></span></div>
+        <div><strong>paneMorph</strong><small>Open-source Herdr plugin</small></div>
+      </div>
+      <div class="meta">PRD v0.2 · 20 September 2026</div>
+      <div class="status">Awaiting approval</div>
+    </div>
+
+    <section class="workflow-first" id="workflows">
+      <header>
+        <div>
+          <div class="label">Start here · Core workflows</div>
+          <h1>Every pane and tab workflow</h1>
+          <p>This is the complete v1 behavior map. paneMorph moves live terminal processes between tabs and pane layouts—it never clones or restarts them.</p>
+        </div>
+        <div class="doc-id">paneMorph / PRD-002<br>approval before implementation</div>
+      </header>
+      <nav class="workflow-index" aria-label="Core workflow index">
+        <a href="#wf-01"><b>WF-01</b><span>Create tab</span><small><kbd>Ctrl</kbd> <kbd>T</kbd></small></a>
+        <a href="#wf-02"><b>WF-02</b><span>Create pane</span><small><kbd>Ctrl</kbd> <kbd>N</kbd></small></a>
+        <a href="#wf-03"><b>WF-03</b><span>Switch tabs</span><small><kbd>Ctrl</kbd> <kbd>]</kbd></small></a>
+        <a href="#wf-04"><b>WF-04</b><span>Switch panes</span><small><kbd>Ctrl</kbd> <kbd>L</kbd></small></a>
+        <a href="#wf-05"><b>WF-05</b><span>Last location</span><small><kbd>Ctrl</kbd> <kbd>`</kbd></small></a>
+        <a href="#wf-06"><b>WF-06</b><span>Pane → new tab</span><small><kbd>Ctrl</kbd> <kbd>E</kbd></small></a>
+        <a href="#wf-07"><b>WF-07</b><span>Send pane</span><small><kbd>Ctrl</kbd> <kbd>G</kbd></small></a>
+        <a href="#wf-08"><b>WF-08</b><span>Bring as pane</span><small><kbd>Ctrl</kbd> <kbd>R</kbd></small></a>
+      </nav>
+    </section>
+
+    <section aria-labelledby="workflow-details">
+      <div class="section-head">
+        <div><div class="label">Normative behavior</div><h2 id="workflow-details">Workflow details</h2></div>
+        <p>Each workflow states the trigger, topology change, focus result, and edge behavior. These examples are the acceptance contract for v1.</p>
+      </div>
+
+      <article class="workflow" id="wf-01">
+        <div><div class="wf-id">WF-01</div><div class="shortcut"><small>Default</small><kbd>Ctrl</kbd> <kbd>T</kbd></div></div>
+        <div class="wf-body">
+          <h3>Quick-create a tab</h3>
+          <p>Create a new tab immediately after the active tab, using Herdr’s configured working-directory policy. The new tab is focused.</p>
+          <div class="state-flow">
+            <div class="state"><div class="state-title">Before</div><div class="tabs"><span class="tab active">Tab 1</span></div><div class="panes"><span class="pane focus">A</span></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="state"><div class="state-title">After</div><div class="tabs"><span class="tab">Tab 1</span><span class="tab active">Tab 2</span></div><div class="panes"><span class="pane focus">New shell</span></div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="workflow" id="wf-02">
+        <div><div class="wf-id">WF-02</div><div class="shortcut"><small>Default</small><kbd>Ctrl</kbd> <kbd>N</kbd></div></div>
+        <div class="wf-body">
+          <h3>Quick-create a pane</h3>
+          <p>Split the focused pane to the right and focus the new pane. This is always a right split in v1.</p>
+          <div class="state-flow">
+            <div class="state"><div class="state-title">Before</div><div class="tabs"><span class="tab active">Tab 1</span></div><div class="panes"><span class="pane focus">A</span></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="state"><div class="state-title">After</div><div class="tabs"><span class="tab active">Tab 1</span></div><div class="panes"><span class="pane">A</span><span class="pane focus">New</span></div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="workflow" id="wf-03">
+        <div><div class="wf-id">WF-03</div><div class="shortcut"><small>Next / previous</small><kbd>Ctrl</kbd> <kbd>]</kbd> &nbsp; <kbd>Ctrl</kbd> <kbd>[</kbd></div></div>
+        <div class="wf-body">
+          <h3>Switch the active tab</h3>
+          <p>Cycle through tabs in visual order and wrap at the ends. Each tab restores the pane that was most recently focused inside it.</p>
+          <div class="state-flow">
+            <div class="state"><div class="state-title">Before</div><div class="tabs"><span class="tab active">Tab 1</span><span class="tab">Tab 2</span></div><div class="panes"><span class="pane focus">A</span></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="state"><div class="state-title">After next tab</div><div class="tabs"><span class="tab">Tab 1</span><span class="tab active">Tab 2</span></div><div class="panes"><span class="pane">B</span><span class="pane focus">C · restored</span></div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="workflow" id="wf-04">
+        <div><div class="wf-id">WF-04</div><div class="shortcut"><small>Next / previous</small><kbd>Ctrl</kbd> <kbd>L</kbd> &nbsp; <kbd>Ctrl</kbd> <kbd>H</kbd></div></div>
+        <div class="wf-body">
+          <h3>Switch the active pane</h3>
+          <p>Cycle through panes inside the current tab using stable visual order. The action never changes tabs.</p>
+          <div class="state-flow">
+            <div class="state"><div class="state-title">Before</div><div class="tabs"><span class="tab active">Tab 1</span></div><div class="panes"><span class="pane focus">A</span><span class="pane">B</span><span class="pane">C</span></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="state"><div class="state-title">After next pane</div><div class="tabs"><span class="tab active">Tab 1</span></div><div class="panes"><span class="pane">A</span><span class="pane focus">B</span><span class="pane">C</span></div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="workflow" id="wf-05">
+        <div><div class="wf-id">WF-05</div><div class="shortcut"><small>Toggle</small><kbd>Ctrl</kbd> <kbd>`</kbd></div></div>
+        <div class="wf-body">
+          <h3>Toggle the last active location</h3>
+          <p>Jump between the two most recently focused panes. They may be in the same tab or different tabs. Repeated presses toggle A ↔ B.</p>
+          <div class="state-flow">
+            <div class="state"><div class="state-title">Current</div><div class="tabs"><span class="tab">Tab 1</span><span class="tab active">Tab 2</span></div><div class="panes"><span class="pane focus">C</span></div></div>
+            <div class="flow-arrow">↔</div>
+            <div class="state"><div class="state-title">Last location</div><div class="tabs"><span class="tab active">Tab 1</span><span class="tab">Tab 2</span></div><div class="panes"><span class="pane">A</span><span class="pane focus">B</span></div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="workflow" id="wf-06">
+        <div><div class="wf-id">WF-06</div><div class="shortcut"><small>Extract</small><kbd>Ctrl</kbd> <kbd>E</kbd></div></div>
+        <div class="wf-body">
+          <h3>Move the current pane into a new background tab</h3>
+          <p>Detach the focused pane from its current layout and place it in a new tab immediately after the current tab. Keep focus in the original tab.</p>
+          <div class="state-flow">
+            <div class="state"><div class="state-title">Before</div><div class="tabs"><span class="tab active">Tab 1</span></div><div class="panes"><span class="pane">A</span><span class="pane focus">B</span></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="state"><div class="state-title">After</div><div class="tabs"><span class="tab active">Tab 1 · A</span><span class="tab">Tab 2 · B</span></div><div class="panes"><span class="pane focus">A</span></div></div>
+          </div>
+          <div class="rule warn" style="margin-top:14px"><strong>If it is the tab’s only pane:</strong> the pane still moves into a newly created tab, the empty source tab closes, and focus remains on the moved pane because no original pane survives.</div>
+        </div>
+      </article>
+
+      <article class="workflow" id="wf-07">
+        <div><div class="wf-id">WF-07</div><div class="shortcut"><small>Send</small><kbd>Ctrl</kbd> <kbd>G</kbd></div></div>
+        <div class="wf-body">
+          <h3>Send the current pane to a tab</h3>
+          <p>Open a destination selector containing “New background tab” and every other tab in the workspace. Selecting a tab inserts the current pane on its right.</p>
+          <div class="selector">
+            <div class="search">Send current pane…</div>
+            <div class="option active"><span>＋</span><strong>New background tab</strong><small>default</small></div>
+            <div class="option"><span>↳</span><span>Tab 1 · API</span><small>1 pane</small></div>
+            <div class="option"><span>↳</span><span>Tab 3 · Tests</span><small>2 panes</small></div>
+          </div>
+          <ol class="steps"><li>Type to filter, use arrows to select, Enter to move, Esc to cancel.</li><li>The source pane keeps its running process and scrollback.</li><li>If its old tab becomes empty, that tab closes automatically.</li><li>Focus stays in the original location when possible; an optional “move and focus” action may be added later.</li></ol>
+        </div>
+      </article>
+
+      <article class="workflow" id="wf-08">
+        <div><div class="wf-id">WF-08</div><div class="shortcut"><small>Bring</small><kbd>Ctrl</kbd> <kbd>R</kbd></div></div>
+        <div class="wf-body">
+          <h3>Bring any tab or pane into the current tab</h3>
+          <p>Open a searchable selector grouped by tabs. Select one pane to move only it, or select the tab row to move its complete pane layout to the right of the current pane.</p>
+          <div class="selector">
+            <div class="search">Bring as a pane on the right…</div>
+            <div class="option active"><span>▾</span><strong>Tab 1 · API</strong><small>move all · 2 panes</small></div>
+            <div class="option child"><span>├</span><span>Claude · server</span><small>~/api</small></div>
+            <div class="option child"><span>└</span><span>Shell · logs</span><small>~/api</small></div>
+            <div class="option"><span>▾</span><strong>Tab 3 · Review</strong><small>1 pane</small></div>
+            <div class="option child"><span>└</span><span>Codex · review</span><small>~/app</small></div>
+          </div>
+          <div class="state-flow">
+            <div class="state"><div class="state-title">Before · current Tab 2</div><div class="tabs"><span class="tab">Tab 1 · A+B</span><span class="tab active">Tab 2 · C</span></div><div class="panes"><span class="pane focus">C</span></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="state"><div class="state-title">After selecting whole Tab 1</div><div class="tabs"><span class="tab active">Tab 1 · merged</span></div><div class="panes"><span class="pane focus">C</span><span class="pane stack"><span>A</span><span>B</span></span></div></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section id="selector-rules">
+      <div class="section-head"><div><div class="label">Selector semantics</div><h2>What happens for every selection</h2></div><p>The selector must make the consequence obvious before Enter is pressed.</p></div>
+      <table>
+        <thead><tr><th>Selection</th><th>Operation</th><th>Source result</th><th>Destination result</th></tr></thead>
+        <tbody>
+          <tr><td>One pane from another tab</td><td>Move that live pane only</td><td>Other panes remain; empty source tab closes</td><td>Selected pane appears to the right</td></tr>
+          <tr><td>One-pane tab</td><td>Move its only pane</td><td>Source tab closes</td><td>Pane appears to the right</td></tr>
+          <tr><td>Multi-pane tab</td><td>Move the complete layout subtree</td><td>Source tab closes after all panes move</td><td>Layout is nested on the right with splits and ratios preserved</td></tr>
+          <tr><td>Pane already in current tab</td><td>Focus only; do not move</td><td>No topology change</td><td>Chosen pane receives focus</td></tr>
+          <tr><td>Current pane/current tab</td><td>Disabled row</td><td>No change</td><td>Selector explains “already current”</td></tr>
+          <tr><td>Zoomed source or destination</td><td>Reject before mutation</td><td>No change</td><td>Notice asks the user to unzoom first</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="requirements">
+      <div class="section-head"><div><div class="label">Requirements</div><h2>Product contract</h2></div><p>All items below are required for the first open-source release.</p></div>
+      <div class="grid two">
+        <article class="card"><h3>Live-process preservation</h3><p class="muted">Moving a pane preserves its process, working directory, terminal state, scrollback, title, and detected agent session.</p></article>
+        <article class="card"><h3>Two-key maximum</h3><p class="muted">Every default shortcut uses one key or a modifier plus one key. No default requires three simultaneous keys or a prefix sequence.</p></article>
+        <article class="card"><h3>No automatic overwrite</h3><p class="muted">Installation proposes the shortcut preset, detects collisions, and asks before changing Herdr configuration.</p></article>
+        <article class="card"><h3>Keyboard-first selectors</h3><p class="muted">Search, arrows, Enter, and Esc are sufficient. Mouse support is useful but not required for v1.</p></article>
+        <article class="card"><h3>Safe complex moves</h3><p class="muted">Capture layouts, preflight every pane, execute deterministically, verify the result, and attempt rollback on partial failure.</p></article>
+        <article class="card"><h3>Local and private</h3><p class="muted">No network requests, accounts, analytics, telemetry, or hosted service. The plugin talks only to the active Herdr server.</p></article>
+      </div>
+    </section>
+
+    <section id="shortcuts">
+      <div class="section-head"><div><div class="label">Shortcut preset</div><h2>One modifier, one key</h2></div><p>These are proposed defaults, not hard-coded behavior. Users may rebind every action.</p></div>
+      <table>
+        <thead><tr><th>Action</th><th>Default</th><th>Maximum keys</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>New tab</td><td><kbd>Ctrl</kbd> <kbd>T</kbd></td><td>2</td><td>Direct, mnemonic</td></tr>
+          <tr><td>New pane right</td><td><kbd>Ctrl</kbd> <kbd>N</kbd></td><td>2</td><td>Direct, mnemonic</td></tr>
+          <tr><td>Next / previous tab</td><td><kbd>Ctrl</kbd> <kbd>]</kbd> / <kbd>Ctrl</kbd> <kbd>[</kbd></td><td>2</td><td>Wraps through tabs</td></tr>
+          <tr><td>Next / previous pane</td><td><kbd>Ctrl</kbd> <kbd>L</kbd> / <kbd>Ctrl</kbd> <kbd>H</kbd></td><td>2</td><td>Visual left/right motion</td></tr>
+          <tr><td>Last active location</td><td><kbd>Ctrl</kbd> <kbd>`</kbd></td><td>2</td><td>Toggles two recent panes</td></tr>
+          <tr><td>Extract pane to tab</td><td><kbd>Ctrl</kbd> <kbd>E</kbd></td><td>2</td><td>“Extract”</td></tr>
+          <tr><td>Send current pane</td><td><kbd>Ctrl</kbd> <kbd>G</kbd></td><td>2</td><td>“Go/send” selector</td></tr>
+          <tr><td>Bring tab/pane here</td><td><kbd>Ctrl</kbd> <kbd>R</kbd></td><td>2</td><td>“Retrieve” selector</td></tr>
+        </tbody>
+      </table>
+      <div class="rule warn" style="margin-top:14px"><strong>Approval note:</strong> direct Ctrl bindings may replace familiar shell/editor actions. The installer must show detected collisions and let the user accept, rebind, or skip each shortcut individually.</div>
+    </section>
+
+    <section id="acceptance">
+      <div class="section-head"><div><div class="label">Release gate</div><h2>Acceptance scenarios</h2></div><p>These topology tests must pass on macOS and Linux before v1.0.</p></div>
+      <table>
+        <thead><tr><th>Starting topology</th><th>Workflow</th><th>Required outcome</th></tr></thead>
+        <tbody>
+          <tr><td>1 tab × 1 pane</td><td>WF-01 / WF-02</td><td>New tab or right pane appears and is focused.</td></tr>
+          <tr><td>1 tab × 3 panes</td><td>WF-06 on middle pane</td><td>Two panes remain; selected pane becomes a background tab.</td></tr>
+          <tr><td>1 tab × 1 pane</td><td>WF-06</td><td>Pane transfers through a new tab without process restart; empty source disappears.</td></tr>
+          <tr><td>2 tabs: 1 pane + 2 panes</td><td>WF-08 select one-pane tab</td><td>One tab remains with three panes; imported pane is on the right.</td></tr>
+          <tr><td>2 tabs: 2 panes + 2 panes</td><td>WF-08 select whole tab</td><td>One tab remains; imported two-pane layout is preserved as a right subtree.</td></tr>
+          <tr><td>3 tabs</td><td>WF-07 choose tab 3</td><td>Current pane moves to tab 3; original tab closes only if emptied.</td></tr>
+          <tr><td>Different recent tabs</td><td>WF-05 repeatedly</td><td>Focus alternates between the same two remembered panes.</td></tr>
+          <tr><td>Zoomed tab</td><td>WF-07 / WF-08</td><td>No mutation; clear unzoom instruction is displayed.</td></tr>
+          <tr><td>Remote Herdr server</td><td>All workflows</td><td>Operations use server-qualified workspace, tab, and pane IDs.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="open-source">
+      <div class="section-head"><div><div class="label">Open source</div><h2>Repository and implementation plan</h2></div><p>The public project should be understandable, installable, and testable without hidden services.</p></div>
+      <div class="grid two">
+        <article class="card"><h3>Identity</h3><p class="muted"><strong>Project:</strong> paneMorph<br><strong>Repository:</strong> <code>herdr-paneMorph</code><br><strong>Plugin ID:</strong> <code>dev.panemorph</code><br><strong>License:</strong> MIT</p></article>
+        <article class="card"><h3>Package</h3><p class="muted">Herdr manifest, action commands, terminal selector, configuration assistant, tests, README, architecture guide, contributing guide, security policy, code of conduct, and changelog.</p></article>
+        <article class="card"><h3>Implementation boundary</h3><p class="muted">Use only Herdr’s documented tab, pane, layout, focus, popup, notification, and plugin-action interfaces. No terminal scraping for layout decisions.</p></article>
+        <article class="card"><h3>Initial support</h3><p class="muted">macOS and Linux in v1. Windows follows after keyboard encoding and selector behavior are verified there.</p></article>
+      </div>
+    </section>
+
+    <section id="decisions">
+      <div class="section-head"><div><div class="label">Approval checklist</div><h2>Decisions before implementation</h2></div><p>Check locally while reviewing, then send your choices in chat. The boxes do not save.</p></div>
+      <div class="grid two">
+        <label class="decision"><input type="checkbox"><span><strong>Name exactly “paneMorph”</strong><span class="recommended"> Recommended</span><br><span class="muted">Folder and public product name use lower-case p and capital M.</span></span></label>
+        <label class="decision"><input type="checkbox"><span><strong>Eight workflows are complete</strong><br><span class="muted">Create, switch, last-location, extract, send, and bring cover v1.</span></span></label>
+        <label class="decision"><input type="checkbox"><span><strong>Background tab meaning</strong><span class="recommended"> Recommended</span><br><span class="muted">Place after current tab without stealing focus.</span></span></label>
+        <label class="decision"><input type="checkbox"><span><strong>Whole-tab layout preservation</strong><span class="recommended"> Recommended</span><br><span class="muted">Move the complete layout as a nested right subtree.</span></span></label>
+        <label class="decision"><input type="checkbox"><span><strong>Two-key shortcut preset</strong><br><span class="muted">Approve the Ctrl pairings or reply with exact replacements.</span></span></label>
+        <label class="decision"><input type="checkbox"><span><strong>Right-side placement in v1</strong><span class="recommended"> Recommended</span><br><span class="muted">Other directions can follow in a later release.</span></span></label>
+        <label class="decision"><input type="checkbox"><span><strong>MIT license</strong><span class="recommended"> Recommended</span><br><span class="muted">Permissive open-source distribution and contribution.</span></span></label>
+        <label class="decision"><input type="checkbox"><span><strong>macOS + Linux first</strong><br><span class="muted">Windows support follows after v1 behavior stabilizes.</span></span></label>
+      </div>
+    </section>
+
+    <section class="approval">
+      <div class="label">Hard gate</div>
+      <h2>Implementation begins only after approval</h2>
+      <p>Reply <strong>“Approved”</strong> if every workflow and decision is correct. Otherwise reference a workflow directly—for example, <code>WF-08: selecting a whole tab should flatten panes instead of preserving its layout</code>.</p>
+    </section>
+
+    <footer>paneMorph · Workflow-first product requirements · PRD v0.2 · Light-mode document</footer>
+  </main>
+</body>
+</html>
