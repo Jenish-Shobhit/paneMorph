@@ -13,8 +13,8 @@ It adds three layout actions and a direct two-key preset:
 | `Ctrl+L` / `Ctrl+H` | Next / previous pane |
 | `Ctrl+\`` | Toggle the last active pane |
 | `Ctrl+E` | Extract the focused pane to a background tab |
-| `Ctrl+G` | Send the focused pane to a chosen tab |
-| `Ctrl+R` | Bring a tab or pane into the current tab on the right |
+| `Ctrl+S` | Send the focused pane to a chosen tab |
+| `Ctrl+F` | Fetch a tab or pane into the current tab on the right |
 
 The complete behavior and topology examples are in [PRD.html](PRD.html).
 
@@ -51,7 +51,8 @@ herdr server reload-config
 ```
 
 The direct preset replaces several familiar shell bindings, including
-`Ctrl+R` history search and `Ctrl+L` clear-screen. Every action is rebindable.
+`Ctrl+S` flow control, `Ctrl+F` cursor movement, and `Ctrl+L` clear-screen.
+Every action is rebindable.
 
 ## Local development
 
@@ -82,4 +83,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Security reports should follow
 ## License
 
 MIT — see [LICENSE](LICENSE).
-

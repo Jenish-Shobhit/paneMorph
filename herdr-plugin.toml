@@ -1,6 +1,6 @@
 id = "dev.panemorph"
 name = "paneMorph"
-version = "0.1.0"
+version = "0.1.1"
 min_herdr_version = "0.9.0"
 description = "Create, switch, extract, send, and merge live Herdr panes and tabs."
 platforms = ["macos", "linux"]
@@ -28,4 +28,3 @@ id = "selector"
 title = "paneMorph"
 placement = "overlay"
 command = ["python3", "-m", "panemorph.actions.selector"]
-

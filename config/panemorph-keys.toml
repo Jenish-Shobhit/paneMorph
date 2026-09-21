@@ -16,14 +16,13 @@ command = "dev.panemorph.extract-pane"
 description = "Move focused pane to a background tab"
 
 [[keys.command]]
-key = "ctrl+g"
+key = "ctrl+s"
 type = "plugin_action"
 command = "dev.panemorph.send-pane"
 description = "Send focused pane to a tab"
 
 [[keys.command]]
-key = "ctrl+r"
+key = "ctrl+f"
 type = "plugin_action"
 command = "dev.panemorph.bring-pane"
 description = "Bring a tab or pane into this tab"
-
