@@ -1,6 +1,6 @@
 [project]
 name = "panemorph"
-version = "0.1.0"
+version = "0.1.2"
 description = "Move live Herdr panes between tabs without restarting their processes."
 requires-python = ">=3.10"
 license = { text = "MIT" }

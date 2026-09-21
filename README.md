@@ -65,6 +65,14 @@ python3 -m panemorph.doctor
 The doctor command is read-only. It checks the current Herdr socket and prints
 only version and topology counts.
 
+For live integration testing, start a disposable named server with
+`herdr --session panemorph-test server`. In another terminal, link this checkout
+using `herdr --session panemorph-test plugin link "$PWD" --enabled`, then run
+`PYTHONPATH=. python3 tests/integration_herdr.py --socket PATH`, using the API
+socket path printed by that server. The script creates and removes its own test
+workspace and refuses sockets outside a `panemorph-*` directory. Stop only the
+test server afterward with `herdr session stop panemorph-test`.
+
 ## Safety model
 
 - Complex moves are rejected while a source or destination tab is zoomed.
@@ -72,6 +80,7 @@ only version and topology counts.
 - If a later pane move fails, paneMorph attempts to return already-moved panes
   to the still-open source tab.
 - Errors go to the Herdr plugin log and a best-effort local notification.
+- Selectors close and restore the tab layout before applying the chosen move.
 - The selector never includes another workspace; cross-workspace moves are out
   of scope for v1.
 

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import curses
+import json
 import os
 import sys
+from dataclasses import asdict
+from pathlib import Path
 
 from panemorph.api import HerdrClient, HerdrError, caller_pane_id
 from panemorph.model import Choice
@@ -74,6 +77,10 @@ def main() -> int:
     if mode not in {"send", "bring"}:
         print("paneMorph: selector mode is missing", file=sys.stderr)
         return 2
+    result_path = os.environ.get("PANEMORPH_RESULT_PATH")
+    if not result_path:
+        print("paneMorph: selector result path is missing", file=sys.stderr)
+        return 2
     try:
         client = HerdrClient()
         service = PaneMorphService(client)
@@ -81,17 +88,11 @@ def main() -> int:
         snapshot = service.snapshot_for(pane)
         choices = service.send_choices(pane, snapshot) if mode == "send" else service.bring_choices(pane, snapshot)
         choice = curses.wrapper(pick, choices, mode)
-        if choice is None:
-            return 0
-        if mode == "send":
-            service.send(pane, choice)
-        else:
-            service.bring(pane, choice)
+        # Only choose here. The action runner applies the move after Herdr
+        # removes this overlay and restores the original tab's zoom state.
+        Path(result_path).write_text(json.dumps({"choice": asdict(choice) if choice else None}))
     except (HerdrError, curses.error) as error:
-        try:
-            client.notify("paneMorph could not complete the move", str(error))
-        except UnboundLocalError:
-            pass
+        Path(result_path).write_text(json.dumps({"error": str(error)}))
         print(f"paneMorph: {error}", file=sys.stderr)
         return 1
     return 0
@@ -99,4 +100,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
