@@ -1,30 +1,99 @@
 id = "dev.panemorph"
 name = "paneMorph"
-version = "0.1.2"
+version = "0.2.0"
 min_herdr_version = "0.9.0"
-description = "Create, switch, extract, send, and merge live Herdr panes and tabs."
+description = "Send any pane anywhere. Fetch any pane here."
 platforms = ["macos", "linux"]
+
+# GitHub installs build the binary; linked checkouts run `cargo build --release`.
+[[build]]
+command = ["cargo", "build", "--release", "--locked"]
+
+# Commands start with ./ so herdr resolves them against the plugin root for
+# actions and popups alike.
+
+[[actions]]
+id = "send"
+title = "Send the focused pane to a tab or space"
+contexts = ["pane"]
+command = ["./bin/panemorph", "send"]
+
+[[actions]]
+id = "fetch"
+title = "Fetch a pane or tab into this tab"
+contexts = ["pane"]
+command = ["./bin/panemorph", "fetch"]
+
+[[actions]]
+id = "move-tab-new"
+title = "Move the focused pane to a new tab next to this one"
+contexts = ["pane"]
+command = ["./bin/panemorph", "move-tab-new"]
+
+[[actions]]
+id = "move-space-new"
+title = "Move the focused pane to a new space"
+contexts = ["pane"]
+command = ["./bin/panemorph", "move-space-new"]
+
+[[actions]]
+id = "move-tab-prev"
+title = "Move the focused pane one tab left"
+contexts = ["pane"]
+command = ["./bin/panemorph", "move-tab-prev"]
+
+[[actions]]
+id = "move-tab-next"
+title = "Move the focused pane one tab right"
+contexts = ["pane"]
+command = ["./bin/panemorph", "move-tab-next"]
+
+[[actions]]
+id = "undo"
+title = "Put the last moved pane back"
+contexts = ["pane"]
+command = ["./bin/panemorph", "undo"]
+
+# Deprecated aliases, removed in v1.0.
 
 [[actions]]
 id = "extract-pane"
-title = "Move focused pane to a background tab"
+title = "Deprecated: use move-tab-new"
 contexts = ["pane"]
-command = ["python3", "-m", "panemorph.actions.extract"]
+command = ["./bin/panemorph", "extract-pane"]
 
 [[actions]]
 id = "send-pane"
-title = "Send focused pane to a tab"
+title = "Deprecated: use send"
 contexts = ["pane"]
-command = ["python3", "-m", "panemorph.actions.open_selector", "send"]
+command = ["./bin/panemorph", "send-pane"]
 
 [[actions]]
 id = "bring-pane"
-title = "Bring a tab or pane into the current tab"
+title = "Deprecated: use fetch"
 contexts = ["pane"]
-command = ["python3", "-m", "panemorph.actions.open_selector", "bring"]
+command = ["./bin/panemorph", "bring-pane"]
 
 [[panes]]
-id = "selector"
+id = "send"
+title = "paneMorph · send"
+placement = "popup"
+width = "60%"
+height = "50%"
+command = ["./bin/panemorph", "window", "send"]
+
+[[panes]]
+id = "fetch"
+title = "paneMorph · fetch"
+placement = "popup"
+width = "64%"
+height = "60%"
+command = ["./bin/panemorph", "window", "fetch"]
+
+[[panes]]
+id = "notice"
 title = "paneMorph"
-placement = "overlay"
-command = ["python3", "-m", "panemorph.actions.selector"]
+placement = "popup"
+width = 60
+height = 7
+command = ["./bin/panemorph", "notice"]
