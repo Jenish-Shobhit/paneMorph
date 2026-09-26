@@ -608,6 +608,21 @@ mod tests {
         let _ = FetchTarget::Pane(String::new());
     }
 
+    /// Edge case 1.12: focus moving elsewhere while Send is open does not
+    /// change the pane being sent; it is tracked by terminal id.
+    #[test]
+    fn edge_1_12_moving_pane_does_not_follow_later_focus() {
+        let (sim, mut app) = app(Mode::Send);
+        let terminal = app.source.as_ref().unwrap().terminal_id.clone();
+        api::pane_focus(&sim, &sim.pane_id("incident")).unwrap();
+        app.set_snapshot(api::snapshot(&sim).unwrap());
+        assert_eq!(app.source.as_ref().unwrap().terminal_id, terminal);
+        assert_eq!(
+            app.source.as_ref().unwrap().pane_id,
+            sim.pane_id("portfolio")
+        );
+    }
+
     /// Edge case 6.15: a refresh keeps the selection on the same row, or
     /// the nearest one when it vanished.
     #[test]

@@ -21,27 +21,33 @@ pub struct Context {
 
 impl Context {
     pub fn from_env() -> Self {
-        let context_json: Value = std::env::var("HERDR_PLUGIN_CONTEXT_JSON")
-            .ok()
-            .and_then(|raw| serde_json::from_str(&raw).ok())
-            .unwrap_or(Value::Null);
-        // Windows receive the source pane from the action that opened them;
-        // actions read herdr's invocation context.
-        let focused_pane_id = non_empty_env("PANEMORPH_SOURCE_PANE_ID")
-            .or_else(|| {
-                context_json
-                    .get("focused_pane_id")
-                    .and_then(Value::as_str)
-                    .filter(|s| !s.is_empty())
-                    .map(str::to_string)
-            })
-            .or_else(|| non_empty_env("HERDR_PANE_ID"));
         Self {
             plugin_id: non_empty_env("HERDR_PLUGIN_ID").unwrap_or_else(|| PLUGIN_ID.to_string()),
             state_dir: state_dir(),
-            focused_pane_id,
+            focused_pane_id: source_pane(non_empty_env),
         }
     }
+}
+
+/// The pane a command acts on (edge case 1.12).
+///
+/// A window gets the pane the opening action saw, in
+/// `PANEMORPH_SOURCE_PANE_ID`, so it moves the pane that was focused when
+/// the key was pressed even if focus changes while it is open. Actions read
+/// herdr's invocation context. A popup has no `HERDR_PANE_ID` of its own.
+pub fn source_pane(var: impl Fn(&str) -> Option<String>) -> Option<String> {
+    var("PANEMORPH_SOURCE_PANE_ID")
+        .or_else(|| {
+            let context: Value = var("HERDR_PLUGIN_CONTEXT_JSON")
+                .and_then(|raw| serde_json::from_str(&raw).ok())
+                .unwrap_or(Value::Null);
+            context
+                .get("focused_pane_id")
+                .and_then(Value::as_str)
+                .filter(|s| !s.is_empty())
+                .map(str::to_string)
+        })
+        .or_else(|| var("HERDR_PANE_ID"))
 }
 
 fn non_empty_env(key: &str) -> Option<String> {
@@ -192,6 +198,32 @@ fn append_log_inner(state_dir: &Path, line: &str) -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Edge case 1.12: the window's pane comes from the opening action, then
+    /// herdr's invocation context, never from later focus.
+    #[test]
+    fn edge_1_12_source_pane_precedence() {
+        let lookup = |pairs: Vec<(&str, &str)>| {
+            let map: std::collections::HashMap<String, String> = pairs
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect();
+            move |key: &str| map.get(key).cloned()
+        };
+        let context = r#"{"focused_pane_id":"w1:p2","invocation_source":"keybinding"}"#;
+        let window = lookup(vec![
+            ("PANEMORPH_SOURCE_PANE_ID", "w1:p7"),
+            ("HERDR_PLUGIN_CONTEXT_JSON", context),
+            ("HERDR_PANE_ID", "w1:p9"),
+        ]);
+        assert_eq!(source_pane(window).as_deref(), Some("w1:p7"));
+        let action = lookup(vec![
+            ("HERDR_PLUGIN_CONTEXT_JSON", context),
+            ("HERDR_PANE_ID", "w1:p9"),
+        ]);
+        assert_eq!(source_pane(action).as_deref(), Some("w1:p2"));
+        assert_eq!(source_pane(lookup(vec![])), None);
+    }
 
     #[test]
     fn herdr_settings_are_read_from_its_config() {
