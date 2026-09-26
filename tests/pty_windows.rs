@@ -25,6 +25,10 @@ fn result_path(name: &str) -> PathBuf {
 
 impl Window {
     fn open(args: &[&str], rows: u16, cols: u16) -> Self {
+        Self::open_with(args, rows, cols, &[])
+    }
+
+    fn open_with(args: &[&str], rows: u16, cols: u16, env: &[(&str, &str)]) -> Self {
         let pair = native_pty_system()
             .openpty(PtySize {
                 rows,
@@ -36,15 +40,19 @@ impl Window {
         let mut command = CommandBuilder::new(env!("CARGO_BIN_EXE_panemorph"));
         command.args(args);
         command.env("TERM", "xterm-256color");
+        // Nothing from a surrounding herdr session reaches the child.
+        for (key, _) in std::env::vars() {
+            if key.starts_with("HERDR_") {
+                command.env_remove(key);
+            }
+        }
         // Never read the user's herdr config: default herdr settings.
         command.env(
             "HERDR_CONFIG_PATH",
             "/nonexistent/panemorph-test/config.toml",
         );
-        for (key, _) in std::env::vars() {
-            if key.starts_with("HERDR_") {
-                command.env_remove(key);
-            }
+        for (key, value) in env {
+            command.env(key, value);
         }
         let child = pair.slave.spawn_command(command).expect("spawn preview");
         drop(pair.slave);
@@ -351,6 +359,34 @@ fn edge_6_14_resize_keeps_filter() {
     w.keys(DOWN);
     w.wait_for("› res");
     w.exit_after(ESC);
+}
+
+/// Edge case 6.5: the real window entrypoint with herdr unreachable shows
+/// "Can't reach herdr" inline and waits for ⎋.
+#[test]
+fn edge_6_5_window_without_herdr_says_so_and_waits() {
+    let state = std::env::temp_dir().join(format!("pm-pty-state-{}", std::process::id()));
+    let mut w = Window::open_with(
+        &["window", "send"],
+        14,
+        70,
+        &[
+            (
+                "HERDR_SOCKET_PATH",
+                "/nonexistent/panemorph-test/herdr.sock",
+            ),
+            ("HERDR_PLUGIN_STATE_DIR", state.to_str().unwrap()),
+            ("PANEMORPH_SOURCE_PANE_ID", "w1:p1"),
+        ],
+    );
+    w.wait_for("Can't reach herdr");
+    std::thread::sleep(Duration::from_millis(300));
+    assert!(
+        w.child.try_wait().unwrap().is_none(),
+        "the window waits for ⎋"
+    );
+    assert!(w.exit_after(ESC) < Duration::from_secs(1));
+    let _ = std::fs::remove_dir_all(state);
 }
 
 /// Print the windows as a terminal shows them (run with --ignored).

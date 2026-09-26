@@ -63,14 +63,9 @@ pub fn state_dir() -> PathBuf {
     }
 }
 
-/// Does herdr capture the mouse (`[ui] mouse_capture`, default true)?
-///
-/// herdr's client holds a lone Esc for up to 150 ms while the host
-/// terminal's mouse capture is on (herdr `raw_input.rs`,
-/// MOUSE_ACTIVE_ESCAPE_SEQUENCE_FLUSH_TIMEOUT_MS), and 10 ms otherwise. A
-/// window that asks for mouse reports turns capture on, so the windows only
-/// use the mouse when herdr itself does. Read-only.
-pub fn herdr_mouse_capture() -> bool {
+/// herdr's config file, read-only: `HERDR_CONFIG_PATH`, else
+/// `$XDG_CONFIG_HOME/herdr/config.toml`, else `~/.config/herdr/config.toml`.
+fn herdr_config_text() -> Option<String> {
     let path = non_empty_env("HERDR_CONFIG_PATH")
         .map(PathBuf::from)
         .or_else(|| {
@@ -78,15 +73,42 @@ pub fn herdr_mouse_capture() -> bool {
         })
         .or_else(|| {
             non_empty_env("HOME").map(|h| PathBuf::from(h).join(".config/herdr/config.toml"))
-        });
-    path.and_then(|p| std::fs::read_to_string(p).ok())
-        .map(|text| mouse_capture_from_config(&text))
+        })?;
+    std::fs::read_to_string(path).ok()
+}
+
+/// Does herdr capture the mouse (`[ui] mouse_capture`, default true)?
+///
+/// herdr's client holds a lone Esc for up to 150 ms while the host
+/// terminal's mouse capture is on (herdr `raw_input.rs`,
+/// MOUSE_ACTIVE_ESCAPE_SEQUENCE_FLUSH_TIMEOUT_MS), and 10 ms otherwise. A
+/// window that asks for mouse reports turns capture on, so the windows only
+/// use the mouse when herdr itself does.
+pub fn herdr_mouse_capture() -> bool {
+    herdr_config_text()
+        .and_then(|text| config_value(&text, "ui.mouse_capture"))
+        .map(|value| value != "false")
         .unwrap_or(true)
 }
 
-/// Find `mouse_capture` under `[ui]` (or `ui.mouse_capture`) in herdr's TOML.
-pub fn mouse_capture_from_config(text: &str) -> bool {
+/// Does herdr deliver toasts (`[ui.toast] delivery`, default "off")?
+///
+/// On herdr 0.9.0 the viewing client applies this setting, so
+/// `notification.show` answers `shown: true` whenever a client is attached,
+/// even when the client then drops the toast (measured; see
+/// docs/verification.md). paneMorph therefore reads the setting itself
+/// (edge case 7.6).
+pub fn herdr_toasts_on() -> bool {
+    herdr_config_text()
+        .and_then(|text| config_value(&text, "ui.toast.delivery"))
+        .is_some_and(|value| value != "off")
+}
+
+/// Find a dotted key (e.g. `ui.toast.delivery`) in herdr's TOML, honouring
+/// `[table]` headers and dotted keys. Returns the value without quotes.
+pub fn config_value(text: &str, wanted: &str) -> Option<String> {
     let mut table = String::new();
+    let mut found = None;
     for raw in text.lines() {
         let line = raw.split('#').next().unwrap_or("").trim();
         if line.starts_with('[') {
@@ -99,17 +121,22 @@ pub fn mouse_capture_from_config(text: &str) -> bool {
         let Some((key, value)) = line.split_once('=') else {
             continue;
         };
-        let key = key.trim();
+        let key: String = key.split('.').map(str::trim).collect::<Vec<_>>().join(".");
         let full = if table.is_empty() {
-            key.to_string()
+            key
         } else {
             format!("{table}.{key}")
         };
-        if full == "ui.mouse_capture" {
-            return value.trim() != "false";
+        if full == wanted {
+            found = Some(
+                value
+                    .trim()
+                    .trim_matches(|c| c == '"' || c == '\'')
+                    .to_string(),
+            );
         }
     }
-    true
+    found
 }
 
 pub fn now_ms() -> u64 {
@@ -167,17 +194,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mouse_capture_setting_is_read_from_herdr_config() {
-        assert!(mouse_capture_from_config(""));
-        assert!(mouse_capture_from_config("[ui]\nsidebar = true\n"));
-        assert!(!mouse_capture_from_config(
+    fn herdr_settings_are_read_from_its_config() {
+        let mouse =
+            |text: &str| config_value(text, "ui.mouse_capture").is_none_or(|v| v != "false");
+        assert!(mouse(""));
+        assert!(mouse("[ui]\nsidebar = true\n"));
+        assert!(!mouse(
             "onboarding = false\n[ui]\nmouse_capture = false # keyboard only\n"
         ));
-        assert!(!mouse_capture_from_config("ui.mouse_capture = false\n"));
-        assert!(mouse_capture_from_config(
-            "[ui.toast]\nmouse_capture = false\n"
-        ));
-        assert!(mouse_capture_from_config("[ui]\nmouse_capture = true\n"));
+        assert!(!mouse("ui.mouse_capture = false\n"));
+        assert!(mouse("[ui.toast]\nmouse_capture = false\n"));
+        let delivery = |text: &str| config_value(text, "ui.toast.delivery");
+        assert_eq!(
+            delivery("[keys]\nprefix = \"ctrl+b\"\n"),
+            None,
+            "default: off"
+        );
+        assert_eq!(
+            delivery("[ui.toast]\ndelivery = \"herdr\"\n").as_deref(),
+            Some("herdr")
+        );
+        assert_eq!(
+            delivery("[ui]\ntoast.delivery = 'system'\n").as_deref(),
+            Some("system")
+        );
+        assert_eq!(delivery("[ui.toast.herdr]\ndelivery = \"x\"\n"), None);
     }
 
     /// Edge case 7.8: the window log keeps its last 500 lines.

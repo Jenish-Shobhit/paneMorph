@@ -1,10 +1,12 @@
 //! Pure decisions about what a move would do, from one snapshot.
 
+use serde::{Deserialize, Serialize};
+
 use crate::model::{PaneInfo, Snapshot};
 use crate::names;
 
 /// Where Send puts the focused pane.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SendTarget {
     /// An existing tab, in this space or another (1.1, 1.3).
     Tab(String),
@@ -17,7 +19,7 @@ pub enum SendTarget {
 }
 
 /// What Fetch brings into the current tab.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FetchTarget {
     Pane(String),
     Tab(String),

@@ -6,7 +6,7 @@ use crate::model::{Command, PaneInfo, Snapshot};
 use crate::names;
 use crate::plan::{self, SendTarget};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum RowAction {
     None,
     Send(SendTarget),

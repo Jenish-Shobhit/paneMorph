@@ -77,10 +77,8 @@ fn check_version(herdr: &dyn Herdr) -> Result<(), String> {
 
 /// Start `panemorph <args>` in its own session so it outlives the popup
 /// that spawned it.
-pub fn spawn_detached(args: &[&str]) {
-    let Ok(exe) = std::env::current_exe() else {
-        return;
-    };
+pub fn spawn_detached_child(args: &[&str]) -> std::io::Result<std::process::Child> {
+    let exe = std::env::current_exe()?;
     let mut command = std::process::Command::new(exe);
     command
         .args(args)
@@ -94,7 +92,11 @@ pub fn spawn_detached(args: &[&str]) {
             Ok(())
         });
     }
-    let _ = command.spawn();
+    command.spawn()
+}
+
+pub fn spawn_detached(args: &[&str]) {
+    let _ = spawn_detached_child(args);
 }
 
 fn popup_size(entrypoint: &str) -> (Value, Value) {
@@ -131,8 +133,12 @@ fn open_popup(
 /// Tell the user about a real failure: a toast, or a notice popup when
 /// toasts are off (edge cases 7.6, 7.7). Retries a busy popup for `wait`.
 pub fn notify_failure(herdr: &dyn Herdr, ctx: &Context, message: &str, wait: Duration) {
-    if let Ok((true, _)) = api::notify(herdr, "paneMorph", message) {
-        return;
+    // herdr's default is `delivery = "off"`; 0.9.0 still answers
+    // `shown: true` then, so only trust the toast when toasts are on.
+    if crate::state::herdr_toasts_on() {
+        if let Ok((true, _)) = api::notify(herdr, "paneMorph", message) {
+            return;
+        }
     }
     let deadline = Instant::now() + wait;
     loop {
@@ -386,16 +392,13 @@ fn window(mode: Mode) -> i32 {
         mode,
         source_id: ctx.focused_pane_id.clone(),
         state_dir: ctx.state_dir.clone(),
-        switch_in_place: false,
+        in_process: false,
     };
-    match run::run(client.clone(), options) {
-        Ok(Exit::Moved { summary, warnings }) => {
+    match run::run(client, options) {
+        Ok(Exit::Moved { summary, .. }) => {
+            // The worker already logged the move and reports late problems
+            // itself once this popup is gone (edge case 6.20).
             append_log(&ctx.state_dir, &format!("{}: {summary}", mode.name()));
-            // Edge case 6.20: the popup is gone once we exit; report late
-            // problems from a helper that outlives it.
-            for warning in warnings {
-                spawn_detached(&["notify-later", &warning]);
-            }
             0
         }
         Ok(Exit::Closed) | Ok(Exit::Switched(_)) => 0,
@@ -407,6 +410,33 @@ fn window(mode: Mode) -> i32 {
             1
         }
     }
+}
+
+/// The detached worker behind a window's ⏎ (see `ui::apply`).
+fn apply_worker(json: &str) -> i32 {
+    let Ok(args) = serde_json::from_str::<crate::ui::apply::WorkerArgs>(json) else {
+        return 2;
+    };
+    let (ctx, client) = match connect() {
+        Ok(pair) => pair,
+        Err((ctx, error)) => {
+            let reply = crate::ui::apply::Reply::Error(error);
+            let _ = crate::ui::apply::write_reply(&args.result, &reply);
+            append_log(&ctx.state_dir, "apply: herdr unreachable");
+            return 1;
+        }
+    };
+    let (reply, warnings) = crate::ui::apply::apply(&client, &ctx.state_dir, &args.request);
+    let failed = matches!(reply, crate::ui::apply::Reply::Error(_));
+    let _ = crate::ui::apply::write_reply(&args.result, &reply);
+    // The window closes after reading the reply; then these can show.
+    for warning in warnings {
+        notify_failure(&client, &ctx, &warning, Duration::from_secs(3));
+    }
+    // If the popup was torn down before reading its reply, tidy up.
+    std::thread::sleep(Duration::from_secs(2));
+    let _ = std::fs::remove_file(&args.result);
+    i32::from(failed)
 }
 
 /// Reopen the other window once this popup has closed (⌃⌥S / ⌃⌥F).
@@ -436,15 +466,6 @@ fn reopen(mode: Mode, source: &str) -> i32 {
             }
         }
     }
-}
-
-fn notify_later(message: &str) -> i32 {
-    let (ctx, client) = match connect() {
-        Ok(pair) => pair,
-        Err(_) => return 1,
-    };
-    notify_failure(&client, &ctx, message, Duration::from_secs(3));
-    0
 }
 
 fn doctor() -> i32 {
@@ -530,7 +551,7 @@ fn preview(args: &[String]) -> i32 {
         mode,
         source_id: source,
         state_dir: state_dir.clone(),
-        switch_in_place: true,
+        in_process: true,
     };
     let exit = run::run(sim.clone() as Arc<dyn Herdr>, options);
     let _ = std::fs::remove_dir_all(&state_dir);
@@ -591,7 +612,7 @@ pub fn main_with(args: &[String]) -> i32 {
             (Some(mode), Some(source)) => reopen(mode, source),
             _ => 2,
         },
-        "notify-later" => args.get(1).map(|m| notify_later(m)).unwrap_or(2),
+        "apply" => args.get(1).map(|json| apply_worker(json)).unwrap_or(2),
         "doctor" => doctor(),
         "preview" => preview(&args[1..]),
         "version" | "--version" | "-V" => {

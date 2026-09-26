@@ -67,9 +67,18 @@ struct Session {
 
 fn env_for(xdg: &Path) -> Vec<(String, String)> {
     let mut env: Vec<(String, String)> = std::env::vars()
-        .filter(|(k, _)| !k.starts_with("HERDR_") && k != "XDG_CONFIG_HOME")
+        .filter(|(k, _)| !k.starts_with("HERDR_") && !k.starts_with("XDG_"))
         .collect();
+    // Config, state (plugin state dirs, agent-detection cache), data and
+    // cache all live in the private directory.
     env.push(("XDG_CONFIG_HOME".into(), xdg.display().to_string()));
+    for (key, sub) in [
+        ("XDG_STATE_HOME", "state"),
+        ("XDG_DATA_HOME", "data"),
+        ("XDG_CACHE_HOME", "cache"),
+    ] {
+        env.push((key.into(), xdg.join(sub).display().to_string()));
+    }
     env.push(("TERM".into(), "xterm-256color".into()));
     env
 }

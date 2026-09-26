@@ -16,12 +16,11 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
 use crate::api::{self, Herdr};
-use crate::exec::{Exec, Outcome};
-use crate::journal::Journal;
+use crate::exec::Exec;
 use crate::model::Command;
-use crate::plan::{self, FetchTarget};
-use crate::state::{append_log, QueueLock};
+use crate::plan;
 use crate::ui::app::{map_key, App, Effect, Mode};
+use crate::ui::apply::{self, Reply, Request};
 use crate::ui::rows::RowAction;
 use crate::ui::view;
 
@@ -47,8 +46,9 @@ pub struct Options {
     pub mode: Mode,
     pub source_id: Option<String>,
     pub state_dir: PathBuf,
-    /// Preview mode switches windows in place instead of reopening a popup.
-    pub switch_in_place: bool,
+    /// Preview mode: moves run in this process (the simulated herdr lives
+    /// here) and windows switch in place instead of reopening a popup.
+    pub in_process: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -203,7 +203,7 @@ pub fn run(herdr: Arc<dyn Herdr>, options: Options) -> io::Result<Exit> {
                 Effect::None => {}
                 Effect::Close => return Ok(Exit::Closed),
                 Effect::Switch(mode) => {
-                    if options.switch_in_place {
+                    if options.in_process {
                         app.switch(mode);
                         started_commands = false;
                     } else {
@@ -257,56 +257,34 @@ fn execute(herdr: &dyn Herdr, app: &mut App, options: &Options, action: RowActio
         app.show_error(plan::PANE_CLOSED);
         return None;
     };
-    let _lock = QueueLock::acquire(&options.state_dir).ok();
-    let exec = Exec::new(herdr);
-    let result = match action {
-        RowAction::Send(target) => exec.send(&source.pane_id, &target, app.split, "send"),
-        RowAction::FetchPane(pane_id) => exec.fetch(
-            &source.pane_id,
-            &FetchTarget::Pane(pane_id),
-            app.split,
-            "fetch",
-        ),
-        RowAction::FetchTab(tab_id) => exec.fetch(
-            &source.pane_id,
-            &FetchTarget::Tab(tab_id),
-            app.split,
-            "fetch-tab",
-        ),
-        RowAction::OpenSpace(_) | RowAction::Back | RowAction::None => return None,
+    if matches!(
+        action,
+        RowAction::OpenSpace(_) | RowAction::Back | RowAction::None
+    ) {
+        return None;
+    }
+    let request = Request {
+        source: source.pane_id,
+        action,
+        split: app.split,
     };
-    let mut journal = Journal::load(&options.state_dir, &herdr.session_key());
-    match result {
-        Ok(Outcome::Done(done)) => {
-            append_log(&options.state_dir, &done.log);
-            if let Some(entry) = done.entry {
-                journal.push(*entry);
-                let _ = journal.save();
-            }
-            Some(Exit::Moved {
-                summary: done.summary,
-                warnings: done.warnings,
-            })
+    let (reply, warnings) = if options.in_process {
+        apply::apply(herdr, &options.state_dir, &request)
+    } else {
+        match apply::run_worker(&options.state_dir, &request) {
+            Ok(reply) => (reply, Vec::new()),
+            Err(error) => (Reply::Error(error), Vec::new()),
         }
-        Ok(Outcome::NoOp(no_op)) => {
-            app.show_info(no_op.0);
-            None
-        }
-        Ok(Outcome::Notice(text)) => {
+    };
+    match reply {
+        Reply::Moved(summary) => Some(Exit::Moved { summary, warnings }),
+        Reply::Info(text) => {
             app.show_info(text);
             None
         }
-        Err(failure) => {
-            append_log(
-                &options.state_dir,
-                &format!("{} error={}", app.mode.name(), failure.message),
-            );
-            if let Some(entry) = failure.entry {
-                journal.push(*entry);
-                let _ = journal.save();
-            }
+        Reply::Error(text) => {
             // Edge case 7.5: inline, and the window stays open.
-            app.show_error(failure.message);
+            app.show_error(text);
             None
         }
     }
