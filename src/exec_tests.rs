@@ -193,7 +193,7 @@ fn edge_1_4_new_tab_in_other_space_at_end() {
 
 /// 1.5, 3.3, 3.8: new space named after the folder, at the bottom.
 #[test]
-fn edge_1_5_new_space_named_after_folder_at_bottom() {
+fn edge_1_5_3_3_3_8_new_space_named_after_folder_at_bottom() {
     let sim = rich();
     send(&sim, "editor", SendTarget::NewSpace);
     assert_eq!(sim.space_labels(), ["work", "ops", "app"]);
@@ -904,4 +904,96 @@ fn edge_5_18_partial_whole_tab_entry_returns_moved_panes() {
     done_undo(Exec::new(&sim).undo(&mut j, None));
     assert_eq!(sim.where_is("editor").unwrap().1, "code");
     assert_eq!(sim.tree_of("deploy"), leaf("deploy"));
+}
+
+/// 7.3: herdr's own recovery after `pane_move_failed` puts the pane in a new
+/// tab; paneMorph finds it by terminal id and still restores the source tab
+/// exactly, and herdr closes the emptied recovery tab.
+#[test]
+fn edge_7_3_rollback_finds_a_pane_herdr_recovered() {
+    let sim = rich();
+    let before = sim.tree_of("editor");
+    sim.inject(Fault::FailMoveRecovered(1));
+    let error = Exec::new(&sim)
+        .fetch(
+            &sim.pane_id("deploy"),
+            &FetchTarget::Tab(sim.tab_id_of("editor")),
+            SplitDir::Right,
+            "fetch",
+        )
+        .unwrap_err();
+    assert!(
+        error
+            .message
+            .starts_with("Couldn't fetch the whole tab; nothing changed."),
+        "{}",
+        error.message
+    );
+    assert_eq!(sim.tree_of("editor"), before);
+    assert_eq!(sim.tab_labels("work"), ["code", "2", "pair"]);
+    assert_eq!(sim.tree_of("deploy"), leaf("deploy"));
+}
+
+/// 5.1: a journal entry holds the terminal, its pane id after the move, the
+/// source space and tab (id, label, position), the neighbour geometry (the
+/// source split tree), whether the tab or space closed, and any zoom removed.
+#[test]
+fn edge_5_1_journal_entry_holds_what_undo_needs() {
+    let sim = rich();
+    api::pane_zoom(&sim, &sim.pane_id("logs"), true).unwrap();
+    let done = send(&sim, "logs", SendTarget::Tab(sim.tab_id_of("deploy")));
+    let entry = done.entry.unwrap();
+    assert_eq!(entry.terminals, [sim.terminal("logs")]);
+    assert_eq!(entry.pane_ids_after, [sim.pane_id("logs")]);
+    assert_eq!(entry.source.workspace_label, "work");
+    assert_eq!(entry.source.workspace_index, 0);
+    assert_eq!(entry.source.tab_label.as_deref(), Some("code"));
+    assert_eq!(entry.source.tab_index, 0);
+    let tree = entry.source_tree.unwrap();
+    assert_eq!(
+        tree,
+        split(
+            SplitDir::Right,
+            0.6,
+            leaf(&sim.terminal("editor")),
+            split(
+                SplitDir::Down,
+                0.3,
+                leaf(&sim.terminal("logs")),
+                leaf(&sim.terminal("tests"))
+            )
+        )
+    );
+    assert!(!entry.source_tab_closed && !entry.source_space_closed);
+    assert_eq!(entry.rezoom_terminal, Some(sim.terminal("logs")));
+    assert!(entry.followed);
+}
+
+/// 7.9: a log line holds the action, the terminal, the pane id before and
+/// after, the source and destination tabs, the result and the duration.
+#[test]
+fn edge_7_9_log_line_contents() {
+    let sim = rich();
+    let before = sim.pane_id("logs");
+    let from = sim.tab_id_of("logs");
+    let done = send(&sim, "logs", SendTarget::Tab(sim.tab_id_of("deploy")));
+    let log = done.log;
+    assert!(log.starts_with("send terminal="), "{log}");
+    assert!(log.contains(&sim.terminal("logs")));
+    assert!(log.contains(&format!("pane={before}->{}", sim.pane_id("logs"))));
+    assert!(log.contains(&format!("from={from} to={}", sim.tab_id_of("logs"))));
+    assert!(log.contains("result=changed"));
+    assert!(log.trim_end().ends_with("ms"));
+}
+
+/// 3.10: paneMorph never asks for a name; it passes the names it chose.
+#[test]
+fn edge_3_10_names_are_passed_never_prompted() {
+    let sim = rich();
+    send(&sim, "editor", SendTarget::NewTabHere);
+    send(&sim, "logs", SendTarget::NewSpace);
+    let moves = sim.calls("pane.move");
+    assert_eq!(moves[0]["destination"]["label"], "claude");
+    assert_eq!(moves[1]["destination"]["label"], "app");
+    assert_eq!(moves[1]["destination"]["tab_label"], "tail");
 }

@@ -225,15 +225,20 @@ fn open_window(mode: Mode) -> i32 {
             0
         }
         Err(error) => {
-            let text = if error.to_string().contains("too small") {
-                "Terminal too small for the paneMorph window".to_string()
-            } else {
-                format!("Couldn't open the {} window: {error}", mode.name())
-            };
+            let text = open_error_text(mode, &error);
             notify_failure(&client, &ctx, &text, Duration::ZERO);
             eprintln!("paneMorph: {text}");
             1
         }
+    }
+}
+
+/// Words for a window that herdr could not open (edge case 6.10).
+fn open_error_text(mode: Mode, error: &HerdrError) -> String {
+    if error.to_string().contains("too small") {
+        "Terminal too small for the paneMorph window".to_string()
+    } else {
+        format!("Couldn't open the {} window: {error}", mode.name())
     }
 }
 
@@ -646,7 +651,7 @@ mod tests {
     }
 
     #[test]
-    fn manifest_keeps_min_version_and_every_action() {
+    fn edge_4_15_and_6_7_manifest_keeps_aliases_and_min_version() {
         let manifest = include_str!("../herdr-plugin.toml");
         assert!(manifest.contains(&format!("min_herdr_version = \"{MIN_HERDR}\"")));
         for id in [
@@ -670,8 +675,22 @@ mod tests {
         assert!(manifest.contains("placement = \"popup\""));
     }
 
+    /// Edge case 6.10: herdr's "terminal area too small for popup".
     #[test]
-    fn popup_sizes_follow_the_spec() {
+    fn edge_6_10_too_small_for_a_popup() {
+        let error = HerdrError::api(
+            "plugin_pane_open_failed",
+            "terminal area too small for popup",
+        );
+        assert_eq!(
+            open_error_text(Mode::Send, &error),
+            "Terminal too small for the paneMorph window"
+        );
+    }
+
+    /// Edge case 6.1: Send is 60% × 50%, Fetch 64% × 60%.
+    #[test]
+    fn edge_6_1_popup_sizes_follow_the_spec() {
         assert_eq!(popup_size("send"), (json!("60%"), json!("50%")));
         assert_eq!(popup_size("fetch"), (json!("64%"), json!("60%")));
     }

@@ -194,4 +194,26 @@ mod tests {
         );
         let _ = std::fs::remove_dir_all(dir);
     }
+
+    /// Edge case 6.20 (with 3.7): a problem after the pane moved goes back to
+    /// the worker as a warning, which reports it once the popup has gone.
+    #[test]
+    fn edge_6_20_late_problems_are_returned_to_the_worker() {
+        let sim = Sim::from_json(SAMPLE_FIXTURE).unwrap();
+        sim.inject(crate::sim::Fault::FailTabMove);
+        let dir = std::env::temp_dir().join(format!("pm-apply-late-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let request = Request {
+            source: sim.pane_id("portfolio"),
+            action: RowAction::Send(SendTarget::NewTabHere),
+            split: SplitDir::Right,
+        };
+        let (reply, warnings) = apply(&sim, &dir, &request);
+        assert!(matches!(reply, Reply::Moved(_)));
+        assert_eq!(
+            warnings,
+            ["Moved, but couldn't place the new tab next to this one."]
+        );
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }

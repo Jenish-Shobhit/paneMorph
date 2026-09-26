@@ -102,6 +102,10 @@ pub enum Fault {
     LoseMoveReply(usize),
     /// Every `tab.move` fails.
     FailTabMove,
+    /// The n-th `pane.move` fails after taking the pane out, and herdr's
+    /// own recovery puts it into a new tab at the end of its old space,
+    /// named after its old tab (herdr `recover_failed_pane_move`).
+    FailMoveRecovered(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -519,6 +523,19 @@ impl State {
                 }
                 tab.root = tree;
             }
+        }
+        if self.faults.contains(&Fault::FailMoveRecovered(index)) {
+            let space = &mut self.spaces[ssi];
+            let number = space.next_tab;
+            space.next_tab += 1;
+            space.tabs.push(Tab {
+                number,
+                custom: Some(format!("recovered {previous_tab_id}")),
+                root: Tree::leaf(&term),
+                focused: term.clone(),
+                zoomed: false,
+            });
+            return Err(err("pane_move_failed", "target pane could not be split"));
         }
         let source_space_empty = self.spaces[ssi].tabs.is_empty();
         let target_space_id = match &resolved {

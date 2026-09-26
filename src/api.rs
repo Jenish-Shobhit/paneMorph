@@ -448,7 +448,7 @@ mod tests {
     }
 
     #[test]
-    fn error_objects_keep_code_and_message() {
+    fn edge_6_3_and_6_4_ui_busy_is_recognised() {
         let error = decode_response(
             "r1",
             r#"{"id":"r1","error":{"code":"ui_busy","message":"a popup pane is already open"}}"#,
