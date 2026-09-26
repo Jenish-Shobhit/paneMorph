@@ -6,3 +6,5 @@ htmlcov/
 .DS_Store
 .venv/
 
+# Rust build output
+target/
