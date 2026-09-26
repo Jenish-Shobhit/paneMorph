@@ -333,6 +333,22 @@ impl Session {
             .is_ok_and(|o| !o.stdout.is_empty())
     }
 
+    /// The window and its worker exited and the client stopped drawing
+    /// the popup; until then herdr routes keys to the closing popup.
+    fn closed(&self) {
+        let worker = format!("{ROOT}/target/release/panemorph apply");
+        assert!(wait(|| {
+            !self.window_open("send")
+                && !self.window_open("fetch")
+                && Command::new("pgrep")
+                    .args(["-f", &worker])
+                    .output()
+                    .is_ok_and(|o| o.stdout.is_empty())
+                && !self.screen().contains("paneMorph · ")
+        }));
+        std::thread::sleep(Duration::from_millis(60));
+    }
+
     fn idle(&self) {
         wait(|| {
             self.call(
@@ -498,6 +514,7 @@ fn live_send_fetch_quick_keys_and_undo() {
     std::thread::sleep(Duration::from_millis(250));
     s.press(b"\r");
     assert!(wait(|| s.place("A1") == ("alpha".into(), "logs".into())));
+    s.closed();
     assert_eq!(s.tree("A1"), "right(0.50: B1, A1)");
     assert_eq!(s.focused().as_deref(), Some("A1"));
     assert_eq!(
@@ -563,6 +580,7 @@ fn live_send_fetch_quick_keys_and_undo() {
     assert!(wait(|| s.screen().contains("← back")));
     s.press(b"\x1b[B\r");
     assert!(wait(|| s.place("A2") == ("beta".into(), "deploy".into())));
+    s.closed();
     assert_ne!(s.id("A2"), before);
     s.idle();
     s.press(chord("z"));
@@ -582,6 +600,7 @@ fn live_send_fetch_quick_keys_and_undo() {
     std::thread::sleep(Duration::from_millis(300));
     s.press(b"\r");
     assert!(wait(|| s.place("C2").1 == "code"));
+    s.closed();
     assert_eq!(s.tree("A1"), "right(0.60: right(0.50: A1, C2), A2)");
     assert_eq!(s.focused().as_deref(), Some("A1"));
     s.idle();
@@ -593,6 +612,7 @@ fn live_send_fetch_quick_keys_and_undo() {
     std::thread::sleep(Duration::from_millis(300));
     s.press(b"\r");
     assert!(wait(|| s.place("C1").1 == "code"));
+    s.closed();
     assert_eq!(
         s.tree("A1"),
         "right(0.60: right(0.50: A1, down(0.70: C1, C2)), A2)"
@@ -654,6 +674,7 @@ fn live_send_fetch_quick_keys_and_undo() {
                 .contains("window already open"))));
     s.press(b"\x1b");
     assert!(wait(|| !s.window_open("send")), "6.11 Esc closes");
+    s.closed();
 
     // The deprecated alias still works and says so (4.15).
     s.call("pane.focus", json!({"pane_id": s.id("A2")}));
