@@ -1,28 +1,47 @@
-# paneMorph's direct two-key preset.
-# Review conflicts before merging this into ~/.config/herdr/config.toml.
-[keys]
-new_tab = "ctrl+t"
-split_vertical = "ctrl+n"
-next_tab = "ctrl+]"
-previous_tab = "ctrl+["
-cycle_pane_next = "ctrl+l"
-cycle_pane_previous = "ctrl+h"
-last_pane = "ctrl+backtick"
+# paneMorph 0.2 keys. Merge into ~/.config/herdr/config.toml, then run
+# `herdr config check` and `herdr server reload-config`.
+#
+# Your v0.1 bindings (ctrl+e, ctrl+s, ctrl+f on extract-pane, send-pane and
+# bring-pane) keep working in v0.2 as aliases. Remove them before v1.0.
 
 [[keys.command]]
-key = "ctrl+e"
+key = "ctrl+alt+s"
 type = "plugin_action"
-command = "dev.panemorph.extract-pane"
-description = "Move focused pane to a background tab"
+command = "dev.panemorph.send"
+description = "Send pane"
 
 [[keys.command]]
-key = "ctrl+s"
+key = "ctrl+alt+f"
 type = "plugin_action"
-command = "dev.panemorph.send-pane"
-description = "Send focused pane to a tab"
+command = "dev.panemorph.fetch"
+description = "Fetch a pane here"
 
 [[keys.command]]
-key = "ctrl+f"
+key = "ctrl+alt+t"
 type = "plugin_action"
-command = "dev.panemorph.bring-pane"
-description = "Bring a tab or pane into this tab"
+command = "dev.panemorph.move-tab-new"
+description = "Pane to a new tab"
+
+[[keys.command]]
+key = "ctrl+alt+n"
+type = "plugin_action"
+command = "dev.panemorph.move-space-new"
+description = "Pane to a new space"
+
+[[keys.command]]
+key = "ctrl+alt+left"
+type = "plugin_action"
+command = "dev.panemorph.move-tab-prev"
+description = "Pane one tab left"
+
+[[keys.command]]
+key = "ctrl+alt+right"
+type = "plugin_action"
+command = "dev.panemorph.move-tab-next"
+description = "Pane one tab right"
+
+[[keys.command]]
+key = "ctrl+alt+z"
+type = "plugin_action"
+command = "dev.panemorph.undo"
+description = "Undo the last move"
