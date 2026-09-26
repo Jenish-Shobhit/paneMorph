@@ -233,7 +233,14 @@ pub struct Command {
     pub display: String,
     /// The program name, e.g. `python3`.
     pub program: String,
+    /// The pane's own shell sits at its prompt: nothing is running.
+    pub is_shell: bool,
 }
+
+/// Interactive shells: a pane showing one of these is idle at a prompt.
+pub const SHELLS: &[&str] = &[
+    "zsh", "bash", "fish", "sh", "dash", "ksh", "tcsh", "csh", "nu", "elvish", "xonsh", "pwsh",
+];
 
 impl ProcessInfo {
     /// The foreground command: the process-group leader when known.
@@ -270,7 +277,12 @@ impl ProcessInfo {
         if program.is_empty() {
             return None;
         }
-        Some(Command { display, program })
+        let is_shell = Some(leader.pid) == self.shell_pid || SHELLS.contains(&program.as_str());
+        Some(Command {
+            display,
+            program,
+            is_shell,
+        })
     }
 }
 
@@ -427,6 +439,8 @@ mod tests {
             }],
             ..Default::default()
         };
-        assert_eq!(info.command().unwrap().program, "zsh");
+        let command = info.command().unwrap();
+        assert_eq!(command.program, "zsh");
+        assert!(command.is_shell);
     }
 }

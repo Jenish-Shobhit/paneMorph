@@ -156,7 +156,12 @@ pub fn run(herdr: Arc<dyn Herdr>, options: Options) -> io::Result<Exit> {
     };
 
     enable_raw_mode()?;
-    execute!(io::stdout(), EnterAlternateScreen, EnableMouseCapture)?;
+    execute!(io::stdout(), EnterAlternateScreen)?;
+    // Edge case 6.18: mouse support, but only when herdr captures the
+    // mouse too, so a keyboard-only herdr keeps its fast Esc.
+    if crate::state::herdr_mouse_capture() {
+        execute!(io::stdout(), EnableMouseCapture)?;
+    }
     let _guard = TerminalGuard;
     let default_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {

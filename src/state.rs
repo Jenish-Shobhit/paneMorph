@@ -63,6 +63,55 @@ pub fn state_dir() -> PathBuf {
     }
 }
 
+/// Does herdr capture the mouse (`[ui] mouse_capture`, default true)?
+///
+/// herdr's client holds a lone Esc for up to 150 ms while the host
+/// terminal's mouse capture is on (herdr `raw_input.rs`,
+/// MOUSE_ACTIVE_ESCAPE_SEQUENCE_FLUSH_TIMEOUT_MS), and 10 ms otherwise. A
+/// window that asks for mouse reports turns capture on, so the windows only
+/// use the mouse when herdr itself does. Read-only.
+pub fn herdr_mouse_capture() -> bool {
+    let path = non_empty_env("HERDR_CONFIG_PATH")
+        .map(PathBuf::from)
+        .or_else(|| {
+            non_empty_env("XDG_CONFIG_HOME").map(|d| PathBuf::from(d).join("herdr/config.toml"))
+        })
+        .or_else(|| {
+            non_empty_env("HOME").map(|h| PathBuf::from(h).join(".config/herdr/config.toml"))
+        });
+    path.and_then(|p| std::fs::read_to_string(p).ok())
+        .map(|text| mouse_capture_from_config(&text))
+        .unwrap_or(true)
+}
+
+/// Find `mouse_capture` under `[ui]` (or `ui.mouse_capture`) in herdr's TOML.
+pub fn mouse_capture_from_config(text: &str) -> bool {
+    let mut table = String::new();
+    for raw in text.lines() {
+        let line = raw.split('#').next().unwrap_or("").trim();
+        if line.starts_with('[') {
+            table = line
+                .trim_matches(|c| c == '[' || c == ']')
+                .trim()
+                .to_string();
+            continue;
+        }
+        let Some((key, value)) = line.split_once('=') else {
+            continue;
+        };
+        let key = key.trim();
+        let full = if table.is_empty() {
+            key.to_string()
+        } else {
+            format!("{table}.{key}")
+        };
+        if full == "ui.mouse_capture" {
+            return value.trim() != "false";
+        }
+    }
+    true
+}
+
 pub fn now_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -116,6 +165,20 @@ fn append_log_inner(state_dir: &Path, line: &str) -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn mouse_capture_setting_is_read_from_herdr_config() {
+        assert!(mouse_capture_from_config(""));
+        assert!(mouse_capture_from_config("[ui]\nsidebar = true\n"));
+        assert!(!mouse_capture_from_config(
+            "onboarding = false\n[ui]\nmouse_capture = false # keyboard only\n"
+        ));
+        assert!(!mouse_capture_from_config("ui.mouse_capture = false\n"));
+        assert!(mouse_capture_from_config(
+            "[ui.toast]\nmouse_capture = false\n"
+        ));
+        assert!(mouse_capture_from_config("[ui]\nmouse_capture = true\n"));
+    }
 
     /// Edge case 7.8: the window log keeps its last 500 lines.
     #[test]

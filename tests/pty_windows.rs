@@ -36,6 +36,11 @@ impl Window {
         let mut command = CommandBuilder::new(env!("CARGO_BIN_EXE_panemorph"));
         command.args(args);
         command.env("TERM", "xterm-256color");
+        // Never read the user's herdr config: default herdr settings.
+        command.env(
+            "HERDR_CONFIG_PATH",
+            "/nonexistent/panemorph-test/config.toml",
+        );
         for (key, _) in std::env::vars() {
             if key.starts_with("HERDR_") {
                 command.env_remove(key);

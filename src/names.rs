@@ -98,9 +98,10 @@ pub fn status_glyph(status: &str) -> &'static str {
 /// Name for a new tab made from `pane` (edge case 3.1): agent, else the
 /// running program, else the folder.
 pub fn tab_base_name(pane: &PaneInfo, command: Option<&Command>) -> String {
+    // An idle shell is not a running command, so its folder names the tab.
     let raw = agent(pane)
         .map(str::to_string)
-        .or_else(|| command.map(|c| c.program.clone()))
+        .or_else(|| command.filter(|c| !c.is_shell).map(|c| c.program.clone()))
         .or_else(|| folder(pane))
         .unwrap_or_else(|| "pane".to_string());
     sanitize(&raw)
@@ -217,6 +218,7 @@ mod tests {
         let command = Command {
             display: "python3 scrape_docs.py".into(),
             program: "python3".into(),
+            is_shell: false,
         };
         assert_eq!(
             pane_words(&pane(), Some(&command)).who,
@@ -255,6 +257,7 @@ mod tests {
         let command = Command {
             display: "python3 x.py".into(),
             program: "python3".into(),
+            is_shell: false,
         };
         assert_eq!(tab_base_name(&p, Some(&command)), "python3");
         p.agent = Some("claude".into());

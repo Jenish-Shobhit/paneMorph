@@ -481,6 +481,7 @@ mod tests {
             Command {
                 display: "python3 scrape_docs.py".into(),
                 program: "python3".into(),
+                is_shell: false,
             },
         );
         (sim, app)

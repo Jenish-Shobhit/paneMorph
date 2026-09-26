@@ -48,6 +48,8 @@ pub struct Row {
     pub action: RowAction,
     /// Pane rows split `name` into who and title columns.
     pub title: String,
+    /// The row matches the filter itself, not only through a child row.
+    pub matched: bool,
 }
 
 impl Row {
@@ -66,6 +68,7 @@ impl Row {
             selectable: false,
             action: RowAction::None,
             title: String::new(),
+            matched: true,
         }
     }
 
@@ -84,6 +87,7 @@ impl Row {
             selectable: true,
             action,
             title: String::new(),
+            matched: true,
         }
     }
 
@@ -341,6 +345,7 @@ pub fn fetch_rows(
                 RowAction::FetchTab(tab.tab_id.clone()),
             );
             tab_row.indent = 2;
+            tab_row.matched = tab_matches;
             tab_row.selected_hint = "⏎ whole tab".into();
             if here {
                 tab_row.style = RowStyle::Dim;
@@ -508,6 +513,7 @@ mod tests {
             Command {
                 display: "python3 scrape_docs.py".into(),
                 program: "python3".into(),
+                is_shell: false,
             },
         );
         let rows = fetch_rows(&snap, you, &commands, "");

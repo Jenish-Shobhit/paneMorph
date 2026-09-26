@@ -264,6 +264,12 @@ impl App {
         self.selected_hint = 0;
         self.scroll = 0;
         self.message = None;
+        // Land on the first row the words match itself: typing a pane's
+        // command selects that pane, not the tab row listed above it.
+        let rows = self.rows();
+        if let Some(index) = rows.iter().position(|r| r.selectable && r.matched) {
+            self.select_index(&rows, index);
+        }
         self.ensure_selection();
     }
 
@@ -517,6 +523,36 @@ mod tests {
         assert_eq!(
             app.handle(Input::Enter),
             Effect::Execute(RowAction::Send(SendTarget::Tab(sim.tab_id_of("scraper"))))
+        );
+    }
+
+    /// Typing a pane's words selects the pane, not its tab; typing a tab's
+    /// name selects the tab row.
+    #[test]
+    fn filter_selects_the_first_row_that_matches_itself() {
+        let (sim, mut app) = app(Mode::Fetch);
+        app.commands.insert(
+            sim.terminal("scraper"),
+            Command {
+                display: "python3 scrape_docs.py".into(),
+                program: "python3".into(),
+                is_shell: false,
+            },
+        );
+        for c in "scrape".chars() {
+            app.handle(Input::Char(c));
+        }
+        assert_eq!(
+            app.handle(Input::Enter),
+            Effect::Execute(RowAction::FetchPane(sim.pane_id("scraper")))
+        );
+        app.handle(Input::ClearFilter);
+        for c in "load".chars() {
+            app.handle(Input::Char(c));
+        }
+        assert_eq!(
+            app.handle(Input::Enter),
+            Effect::Execute(RowAction::FetchTab(sim.tab_id_of("scraper")))
         );
     }
 
