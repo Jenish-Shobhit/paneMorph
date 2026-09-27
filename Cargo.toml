@@ -28,7 +28,7 @@ unicode-width = "0.2"
 
 [dev-dependencies]
 portable-pty = "0.9"
-toml = "0.8"
+toml = "1.1"
 vt100 = "0.15"
 
 [profile.release]
