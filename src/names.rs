@@ -197,7 +197,7 @@ mod tests {
             pane_id: "w4:pM".into(),
             workspace_id: "w4".into(),
             tab_id: "w4:t8".into(),
-            cwd: Some("/Users/j/Desktop/acme-web".into()),
+            cwd: Some("/home/dev/code/acme-web".into()),
             ..Default::default()
         }
     }

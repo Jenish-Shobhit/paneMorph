@@ -1064,16 +1064,16 @@ pub const SAMPLE_FIXTURE: &str = r#"{
     {"label": "Studio", "tabs": [
       {"label": "Landing_Page_Copy", "layout": {"split": "right",
         "first": {"pane": {"name": "headline", "agent": "claude", "label": "headline rewrite",
-                           "cwd": "/Users/j/Desktop/Studio", "status": "done"}},
+                           "cwd": "/home/dev/code/Studio", "status": "done"}},
         "second": {"pane": {"name": "portfolio", "agent": "claude", "label": "portfolio copy",
-                            "cwd": "/Users/j/Desktop/acme-web", "status": "idle", "active": true}}}},
-      {"label": "API refactor", "layout": {"pane": {"name": "zsh", "cwd": "/Users/j/Desktop/acme-web"}}},
-      {"label": "Load tests", "layout": {"pane": {"name": "scraper", "cwd": "/Users/j/Desktop/acme-web",
+                            "cwd": "/home/dev/code/acme-web", "status": "idle", "active": true}}}},
+      {"label": "API refactor", "layout": {"pane": {"name": "zsh", "cwd": "/home/dev/code/acme-web"}}},
+      {"label": "Load tests", "layout": {"pane": {"name": "scraper", "cwd": "/home/dev/code/acme-web",
                                                    "command": ["python3", "scrape_docs.py"]}}}
     ]},
     {"label": "Payments_Service_Rewrite", "tabs": [
       {"label": "deploying", "layout": {"pane": {"name": "incident", "agent": "claude",
-        "label": "rollback plan", "cwd": "/Users/j/code/incident-agent", "status": "working"}}}
+        "label": "rollback plan", "cwd": "/home/dev/code/incident-agent", "status": "working"}}}
     ]}
   ]
 }"#;
