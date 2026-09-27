@@ -24,8 +24,8 @@ session. Each run used:
 A real herdr client ran attached inside a pseudo-terminal, and tests pressed
 real key bytes through it. For example, ⌃⌥S arrives as `ESC 0x13`. Screens
 were rendered from the client's output with a VT100 parser. Checksums of the
-user's `~/.config/herdr/plugins.json` and `config.toml` were identical before
-and after every run.
+working session's `~/.config/herdr/plugins.json` and `config.toml` were
+identical before and after every run.
 
 | Suite | Where | Result |
 | --- | --- | --- |
@@ -133,8 +133,8 @@ Partly answered.
 
 - Ghostty 1.3.1's default key table (`ghostty +list-keybinds --default`) has no
   ctrl+alt binding. The nearest defaults are `alt+arrow_left/right`
-  (`esc:b`/`esc:f`) and `super+ctrl+arrows` (resize split). The user's Ghostty
-  config adds no ctrl+alt binding either.
+  (`esc:b`/`esc:f`) and `super+ctrl+arrows` (resize split). The test machine's
+  Ghostty config adds no ctrl+alt binding either.
 - In a popup, herdr's legacy encoding (`src/input/encode.rs`) delivers these
   bytes: ⌃⌥S = `ESC 0x13`, ⌃⌥F = `ESC 0x06`, ⌃⌥T = `ESC 0x14`,
   ⌃⌥N = `ESC 0x0e`, ⌃⌥Z = `ESC 0x1a`, ⌃⌥← = `ESC[1;7D`, ⌃⌥→ = `ESC[1;7C`.
@@ -185,7 +185,7 @@ build --release (in …)". `./bin/panemorph doctor` checks the socket and
 versions (7.13).
 
 **12. Is herdr 0.9.1 in Homebrew yet?**
-Yes. `brew info herdr` shows stable 0.9.1 (bottled); this machine has 0.9.0.
+Yes. `brew info herdr` shows stable 0.9.1 (bottled); the test machine had 0.9.0.
 herdr v0.9.1 was released on 16 September 2026.
 
 ## Other findings
@@ -214,7 +214,7 @@ herdr v0.9.1 was released on 16 September 2026.
 
 | Row | Catalogue | paneMorph 0.2.0 | Why |
 | --- | --- | --- | --- |
-| 1.16 | Require herdr 0.9.1 | Keeps `min_herdr_version = "0.9.0"`, calls `pane.focus` after followed moves, and recommends 0.9.1 | The user runs 0.9.0; question 2 showed that the call works |
+| 1.16 | Require herdr 0.9.1 | Keeps `min_herdr_version = "0.9.0"`, calls `pane.focus` after followed moves, and recommends 0.9.1 | 0.9.0 is still common; question 2 showed that the call works |
 | 2.5 | Kitty flag for ⇧⏎ (catalogue) or no ⇧⏎ (approved design page) | No ⇧⏎. ⏎ on a tab row fetches the whole tab | Follows the approved design |
 | 3.1 | Agent, else command, else folder | An idle shell (the pane's own shell at its prompt) is not a running command, so the folder names the tab | "zsh" was a poor tab name in live tests |
 | 5.14 | Journal valid after a handoff, if terminal ids survive | They do not, so the journal goes stale and ⌃⌥Z says "Nothing to undo" | Question 8 |
@@ -225,7 +225,9 @@ herdr v0.9.1 was released on 16 September 2026.
 
 ## Not done
 
-- Linux was not tested; the code is platform-neutral Unix.
+- No live herdr session was tested on Linux. The unit and pseudo-terminal
+  suites run in CI on Ubuntu as well as macOS, and the code is
+  platform-neutral Unix.
 - The ⌃⌥ chords were not pressed on a physical keyboard in the working
   Ghostty (question 5), because that means the working session.
 - Held-key repeats beyond herdr's 32 concurrent plugin commands (4.9) were not
