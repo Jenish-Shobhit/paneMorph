@@ -3,12 +3,19 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build and publish again, for example v0.2.0
+        required: true
 
 permissions:
   contents: read
 
 env:
   CARGO_TERM_COLOR: always
+  # The tag being released: the pushed tag, or the one given to a manual run.
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   check-version:
@@ -16,9 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
       - name: Compare the tag with Cargo.toml and herdr-plugin.toml
         run: |
-          tag="${GITHUB_REF_NAME#v}"
+          tag="${TAG#v}"
           cargo_version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)
           plugin_version=$(sed -n 's/^version = "\(.*\)"/\1/p' herdr-plugin.toml | head -n1)
           echo "tag=$tag Cargo.toml=$cargo_version herdr-plugin.toml=$plugin_version"
@@ -44,6 +53,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -59,7 +70,7 @@ jobs:
         id: package
         shell: bash
         run: |
-          name="panemorph-${GITHUB_REF_NAME}-${{ matrix.target }}"
+          name="panemorph-${TAG}-${{ matrix.target }}"
           # The archive is a ready-to-link plugin directory: the manifest,
           # the launcher, and the binary where the launcher looks for it.
           mkdir -p "dist/$name/bin" "dist/$name/config" "dist/$name/target/release"
@@ -93,13 +104,15 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
       - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
       - name: Release notes from CHANGELOG.md
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version="${TAG#v}"
           awk -v heading="## [$version]" '
             index($0, heading) == 1 { found = 1; next }
             found && /^## \[/ { exit }
@@ -114,7 +127,7 @@ jobs:
           From GitHub (builds with \`cargo\`):
 
           \`\`\`sh
-          herdr plugin install Jenish-Shobhit/paneMorph --ref ${GITHUB_REF_NAME}
+          herdr plugin install Jenish-Shobhit/paneMorph --ref ${TAG}
           \`\`\`
 
           Or download the archive for your platform below, check it against its
@@ -128,12 +141,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -l dist
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
-            gh release edit "$GITHUB_REF_NAME" --notes-file notes.md
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --notes-file notes.md
           else
-            gh release create "$GITHUB_REF_NAME" dist/* \
-              --title "paneMorph ${GITHUB_REF_NAME}" \
+            gh release create "$TAG" dist/* \
+              --title "paneMorph $TAG" \
               --notes-file notes.md \
               --verify-tag
           fi
