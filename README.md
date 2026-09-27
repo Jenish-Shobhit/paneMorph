@@ -278,22 +278,26 @@ the undo journal (`journal-*.json`), the key queue lock (`queue.lock`) and
 
 ```mermaid
 flowchart LR
-    key(["Key press"]) --> herdr
+    key(["Key press"]) -- "herdr runs the<br/>bound action" --> action
 
-    subgraph herdr["herdr server"]
-        socket[("Unix socket API")]
-        popup["Popup pane"]
+    subgraph plugin["paneMorph processes"]
+        action["panemorph action<br/>send, fetch, move-*, undo"]
+        window["panemorph window<br/>Send or Fetch popup"]
+        worker["panemorph apply<br/>detached worker"]
+        exec["Executor<br/>plan, move, journal"]
     end
 
-    herdr -- "plugin action" --> action["panemorph send, fetch,<br/>move-tab-*, undo"]
-    action -- "plugin.pane.open" --> popup
-    popup --> window["panemorph window<br/>ratatui + crossterm"]
-    window -- "session.snapshot,<br/>events.subscribe" --> socket
-    window -- "Enter" --> worker["panemorph apply<br/>detached worker"]
-    worker -- "pane.move, pane.focus,<br/>pane.zoom, tab.move" --> socket
-    action -- "quick keys" --> socket
-    worker --> state[("State directory<br/>undo journal, queue lock, log")]
-    action --> state
+    subgraph herdr["herdr server"]
+        socket[("Socket API")]
+    end
+
+    action -- "send, fetch:<br/>plugin.pane.open" --> window
+    window -- "Enter" --> worker
+    action -- "quick keys, undo" --> exec
+    worker --> exec
+    window -. "session.snapshot,<br/>events.subscribe" .-> socket
+    exec -- "pane.move, pane.focus,<br/>pane.zoom, tab.move" --> socket
+    exec --> state[("State directory<br/>undo journal, queue lock, log")]
 ```
 
 - **One binary, several roles.** herdr runs `./bin/panemorph <action>` for a
