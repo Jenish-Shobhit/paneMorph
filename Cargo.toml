@@ -2,11 +2,16 @@
 name = "panemorph"
 version = "0.2.0"
 edition = "2021"
-description = "Send any herdr pane anywhere. Fetch any pane here."
-license = "MIT"
-authors = ["Jenish Shobhit"]
-repository = "https://github.com/Jenish-Shobhit/paneMorph"
 rust-version = "1.89"
+description = "herdr plugin that moves live panes between tabs and spaces: send any pane anywhere, fetch any pane here"
+authors = ["Jenish Shobhit"]
+license = "MIT"
+repository = "https://github.com/Jenish-Shobhit/paneMorph"
+homepage = "https://github.com/Jenish-Shobhit/paneMorph#readme"
+readme = "README.md"
+keywords = ["herdr", "terminal", "tui", "ratatui", "pane"]
+categories = ["command-line-utilities", "development-tools"]
+# A herdr plugin, installed with `herdr plugin install`, not a crates.io crate.
 publish = false
 
 [[bin]]
