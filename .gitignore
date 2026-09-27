@@ -1,4 +1,12 @@
 # Rust build output
-target/
+/target/
 
+# Python bytecode left over from the v0.1 package
+__pycache__/
+*.py[cod]
+
+# Editors and operating systems
 .DS_Store
+*.swp
+.idea/
+.vscode/
