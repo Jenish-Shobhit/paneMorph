@@ -70,7 +70,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@1.89
+      # The toolchain goes in `with`, not the ref, so Dependabot does not
+      # mistake it for an action version.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.89"
       - uses: Swatinem/rust-cache@v2
       # `+1.89` overrides rust-toolchain.toml, which selects stable.
       - run: cargo +1.89 test --locked
