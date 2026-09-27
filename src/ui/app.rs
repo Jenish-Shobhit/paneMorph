@@ -455,7 +455,7 @@ mod tests {
         assert_eq!(map_key(key(KeyCode::Esc, KeyModifiers::NONE)), Input::Close);
     }
 
-    /// Edge case 4.16: ⌃⌥M belongs to Codemap; paneMorph ignores it.
+    /// Edge case 4.16: ⌃⌥M belongs to codeMap; paneMorph ignores it.
     #[test]
     fn edge_4_16_ctrl_alt_m_is_ignored() {
         let key = KeyEvent::new(

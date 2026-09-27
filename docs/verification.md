@@ -298,7 +298,7 @@ which a live check citing the row passed, or `live_herdr.rs`. Rows marked
 | 4.8 | Decision | A key pressed twice fast | unit: `edge_4_8_and_7_12_queue_lock_serialises_and_releases`, `edge_4_8_repeated_next_moves_two_tabs`; live: 0.9.0, 0.9.1, live_herdr.rs |
 | 4.9 | Verified | A key held down | lock queue (`edge_4_8_and_7_12_queue_lock_serialises_and_releases`); herdr caps 32 commands |
 | 4.10 | Decision | A quick key pressed while a paneMorph window is open | unit: `edge_4_10_and_6_12_chords`, `edge_4_10_ctrl_alt_chords_inside_a_window`, `edge_4_10_own_key_ignored_other_switches`; live: 0.9.0, 0.9.1 |
-| 4.11 | Verified | A key pressed while another popup (Codemap, a herdr popup command) is open | herdr: keys go to the open popup |
+| 4.11 | Verified | A key pressed while another popup (codeMap, a herdr popup command) is open | herdr: keys go to the open popup |
 | 4.12 | Verified | A key pressed while the window is still opening | herdr: keys dropped while a popup opens |
 | 4.13 | Verified | A ⌃⌥ chord the OS or terminal takes | README: chord conflicts |
 | 4.14 | Assumed | ⌃⌥Z is also bound to herdr's zoom | README warning; question 9 (live) |
