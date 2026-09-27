@@ -1,0 +1,30 @@
+{
+  "spaces": [
+    {"label": "storefront", "tabs": [
+      {"label": "checkout", "layout": {"split": "right", "ratio": 0.55,
+        "first": {"pane": {"name": "checkout", "agent": "claude", "label": "checkout form validation",
+                           "cwd": "/home/dev/code/acme-web", "status": "working", "active": true}},
+        "second": {"pane": {"name": "dev-server", "cwd": "/home/dev/code/acme-web",
+                            "command": ["npm", "run", "dev"]}}}},
+      {"label": "api", "layout": {"pane": {"name": "api", "agent": "codex", "label": "rate limiter",
+                                           "cwd": "/home/dev/code/acme-api", "status": "idle"}}},
+      {"label": "tests", "layout": {"split": "down", "ratio": 0.6,
+        "first": {"pane": {"name": "vitest", "cwd": "/home/dev/code/acme-web",
+                           "command": ["npx", "vitest", "--watch"]}},
+        "second": {"pane": {"name": "shell", "cwd": "/home/dev/code/acme-web"}}}}
+    ]},
+    {"label": "payments", "tabs": [
+      {"label": "refunds", "layout": {"split": "right",
+        "first": {"pane": {"name": "refunds", "agent": "claude", "label": "refund webhooks",
+                           "cwd": "/home/dev/code/payments", "status": "blocked"}},
+        "second": {"pane": {"name": "compose", "cwd": "/home/dev/code/payments",
+                            "command": ["docker", "compose", "logs", "-f"]}}}},
+      {"label": "ledger", "layout": {"pane": {"name": "ledger", "agent": "opencode", "label": "ledger index migration",
+                                              "cwd": "/home/dev/code/payments", "status": "done"}}}
+    ]},
+    {"label": "docs", "tabs": [
+      {"label": "site", "layout": {"pane": {"name": "docs", "cwd": "/home/dev/code/docs",
+                                            "command": ["hugo", "server"]}}}
+    ]}
+  ]
+}

@@ -64,6 +64,15 @@ jobs:
         run: |
           cargo build --release --locked
           ./bin/panemorph version
+      # The README screenshots are rendered from the window code; fail when
+      # a change to the windows was not followed by scripts/screenshots.sh.
+      - name: Screenshots match the code
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cargo run --locked --example screenshots -- --out target/screenshots
+          for file in target/screenshots/*.svg; do
+            diff -u "docs/assets/$(basename "$file")" "$file"
+          done
 
   msrv:
     name: MSRV (Rust 1.89)
