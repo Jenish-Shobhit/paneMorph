@@ -1,8 +1,13 @@
 # Changelog
 
-All notable changes to paneMorph will be documented here.
+All notable changes to paneMorph are documented in this file.
 
-## 0.2.0 — 2026-09-27
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and paneMorph adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.2.0] - 2026-09-27
 
 paneMorph is now a Rust binary (ratatui and crossterm) built with
 `cargo build --release`. The Python package is gone. herdr 0.9.0 still works,
@@ -36,6 +41,11 @@ and 0.9.1 is recommended.
   500 lines.
 - `panemorph doctor` checks the connection and versions.
   `panemorph preview send|fetch` shows a window over a simulated session.
+- Prebuilt release archives for macOS (Apple silicon and Intel) and Linux
+  (x86_64 and arm64, statically linked), each a ready-to-link plugin
+  directory with a SHA-256 checksum.
+- `cargo run --example screenshots` renders the README screenshots from the
+  window code; `--live` captures a real herdr client in a throwaway session.
 
 ### Changed
 
@@ -61,25 +71,45 @@ and 0.9.1 is recommended.
 - The Python package, the overlay selector, its temporary result file and
   its polling loop.
 
-## 0.1.2 — 2026-09-21
+## [0.1.2] - 2026-09-21
 
-- Close the selector and restore Herdr's layout before applying a move, fixing
-  send and bring actions blocked by the overlay's temporary zoom state.
+### Fixed
+
+- Close the selector and restore herdr's layout before applying a move, so
+  send and bring actions are no longer blocked by the overlay's temporary
+  zoom state.
 - Keep the action running until the move completes, so failures reach the
-  plugin action log instead of a prematurely successful launch entry.
-- Add isolated Herdr integration coverage for selection, movement, cancellation,
+  plugin action log instead of a premature success entry.
+
+### Added
+
+- Isolated herdr integration coverage for selection, movement, cancellation
   and preservation of terminal identities.
 
-## 0.1.1 — 2026-09-21
+## [0.1.1] - 2026-09-21
 
-- Fix selector overlays by targeting Herdr's active pane implicitly.
-- Replace conflicting `Ctrl+G` and `Ctrl+R` bindings with `Ctrl+S` and `Ctrl+F`.
+### Fixed
 
-## 0.1.0 — 2026-09-20
+- Selector overlays now target herdr's active pane implicitly.
 
-- Add direct two-key preset for tab and pane creation and navigation.
-- Add focused-pane extraction to a background tab.
-- Add searchable destination selector for sending a pane to another tab.
-- Add searchable tab/pane selector for importing live panes on the right.
-- Preserve multi-pane source layouts through ordered live pane moves.
-- Add preflight zoom checks, partial-move rollback, and local diagnostics.
+### Changed
+
+- The conflicting `Ctrl+G` and `Ctrl+R` bindings are now `Ctrl+S` and
+  `Ctrl+F`.
+
+## [0.1.0] - 2026-09-20
+
+### Added
+
+- A two-key preset for tab and pane creation and navigation.
+- Focused-pane extraction to a background tab.
+- A searchable destination selector for sending a pane to another tab.
+- A searchable tab and pane selector for importing live panes on the right.
+- Multi-pane source layouts preserved through ordered live pane moves.
+- Preflight zoom checks, partial-move rollback and local diagnostics.
+
+[Unreleased]: https://github.com/Jenish-Shobhit/paneMorph/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Jenish-Shobhit/paneMorph/releases/tag/v0.2.0
+[0.1.2]: https://github.com/Jenish-Shobhit/paneMorph/tree/b8b645e
+[0.1.1]: https://github.com/Jenish-Shobhit/paneMorph/tree/0523ebb
+[0.1.0]: https://github.com/Jenish-Shobhit/paneMorph/tree/14f2507
