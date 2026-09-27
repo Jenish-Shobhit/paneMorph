@@ -1,0 +1,95 @@
+name: Bug report
+description: Something in paneMorph does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Before you paste anything,
+        remove private paths, terminal output, and workspace or tab names you
+        would not publish. Security problems go to
+        [private vulnerability reporting](https://github.com/Jenish-Shobhit/paneMorph/security/advisories/new) instead.
+  - type: input
+    id: panemorph-version
+    attributes:
+      label: paneMorph version
+      description: Output of `./bin/panemorph version` in the plugin directory.
+      placeholder: panemorph 0.2.0
+    validations:
+      required: true
+  - type: input
+    id: herdr-version
+    attributes:
+      label: herdr version
+      description: Output of `herdr --version`.
+      placeholder: herdr 0.9.1
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS (Apple silicon)
+        - macOS (Intel)
+        - Linux (x86_64)
+        - Linux (arm64)
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How paneMorph is installed
+      options:
+        - herdr plugin install (from GitHub)
+        - Release archive, linked with herdr plugin link
+        - Local checkout, linked with herdr plugin link
+    validations:
+      required: true
+  - type: input
+    id: action
+    attributes:
+      label: Action or key
+      description: Which action you used, for example `send` (⌃⌥S) or `move-tab-next` (⌃⌥→).
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Include the layout before the move (spaces, tabs, panes) if it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a tab with two panes
+        2. Press ⌃⌥S and choose "New tab here"
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Relevant lines from `herdr plugin log list --plugin dev.panemorph` and,
+        if it helps, from `./bin/panemorph doctor`. Trim them to the relevant lines.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I removed private paths, terminal output and names from everything above.
+          required: true

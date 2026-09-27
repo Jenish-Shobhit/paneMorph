@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a new workflow or an improvement to an existing one.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        paneMorph moves live panes without restarting them. Requests that fit
+        that promise are the easiest to take on.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: The proposal
+      description: How it could work, including keys or window rows if you have them in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other ways to get the same result, in paneMorph, herdr or elsewhere.
+  - type: input
+    id: herdr-version
+    attributes:
+      label: herdr version
+      placeholder: herdr 0.9.1

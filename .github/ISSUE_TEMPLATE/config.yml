@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Jenish-Shobhit/paneMorph/security/advisories/new
+    about: Report vulnerabilities privately, not in a public issue.
+  - name: herdr bugs and questions
+    url: https://github.com/herdrdev/herdr/issues
+    about: Problems with herdr itself belong in the herdr repository.
+  - name: herdr plugin documentation
+    url: https://herdr.dev/docs/plugins/
+    about: How herdr installs, links and runs plugins.
