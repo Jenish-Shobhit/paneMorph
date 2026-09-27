@@ -28,8 +28,8 @@ unicode-width = "0.2"
 
 [dev-dependencies]
 portable-pty = "0.9"
-toml = "0.8"
-vt100 = "0.15"
+toml = "1"
+vt100 = "0.16"
 
 [profile.release]
 codegen-units = 1

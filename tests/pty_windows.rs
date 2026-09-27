@@ -354,7 +354,7 @@ fn edge_6_14_resize_keeps_filter() {
     std::thread::sleep(Duration::from_millis(150));
     {
         let mut parser = w.parser.lock().unwrap();
-        parser.set_size(24, 90);
+        parser.screen_mut().set_size(24, 90);
     }
     w.keys(DOWN);
     w.wait_for("› res");
